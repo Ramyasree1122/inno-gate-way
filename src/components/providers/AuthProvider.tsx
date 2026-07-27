@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthState, User } from '@/shared/types/auth.types';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
@@ -22,19 +23,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loginUser = async (email: string, otp: string) => {
-    // Mock API Call for User OTP login
     setIsLoading(true);
-    setTimeout(() => {
-      if (otp === '123456') { // Mock verification
-        const mockUser: User = { id: '1', email, role: 'User', name: 'Demo User' };
-        setUser(mockUser);
-        localStorage.setItem('mockUser', JSON.stringify(mockUser));
-      } else {
-        setIsLoading(false);
-        throw new Error('Invalid OTP');
-      }
+    try {
+      const response = await authService.loginUser(email, otp);
+      // Update this later if the backend returns actual user details (like name/role)
+      const userObj: User = { id: '1', email, role: 'User', name: 'Demo User' };
+      setUser(userObj);
+      localStorage.setItem('mockUser', JSON.stringify(userObj));
+      // If a token is returned, you can save it here:
+      // localStorage.setItem('token', response.token || response.data?.token);
+    } catch (error) {
       setIsLoading(false);
-    }, 1000);
+      throw error;
+    }
+    setIsLoading(false);
   };
 
   const loginAdmin = async (email: string, password: string) => {
