@@ -36,7 +36,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex bg-white overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 rounded-sm border border-[#CCCCCC] bg-white flex flex-col m-1 shadow-2xl">
+      <aside className="w-64 rounded-sm border border-[#CCCCCC] bg-white flex flex-col m-2 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.16),0_4px_8px_-2px_rgba(0,0,0,0.10)]">
         <div className="h-16 flex items-center px-4 border-b border-[#CCCCCC]">
           <SvgIcon type="radium-ai-icon" width={21} height={23} />
           <span className="text-lg font-semibold pl-1">InnoAIGateway</span>
