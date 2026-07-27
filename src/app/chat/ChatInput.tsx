@@ -134,12 +134,16 @@ export default function ChatInput({
   return (
     <div className="w-full flex flex-col items-center relative">
       <div
-        className={`flex flex-col rounded-[20px] border border-neutral-200 bg-white p-3 px-3 cursor-default w-[50%] max-w-[1100px]
+        className={`flex flex-col rounded-[20px] border border-neutral-200 bg-white p-3 px-3 cursor-default w-[55%] max-w-[1100px]
           
           ${
             isWelcome
               ? "mt-4 shadow-[0px_25px_20px_-20px_rgba(0,0,0,0.40)] transition-all duration-200 hover:border-neutral-300 hover:shadow-[0px_26px_22px_-20px_rgba(0,0,0,0.42)]"
-              : "shadow-none hover:border-neutral-300"
+              : // : "shadow-lg hover:border-neutral-300"
+                // "shadow-[0_10px_20px_rgba(0,0,0,0.05)] hover:border-neutral-300"
+                // "shadow-[0_10px_25px_rgba(0,0,0,0.08)] hover:border-neutral-300"
+                "shadow-[0_10px_25px_rgba(0,0,0,0.1)] hover:border-neutral-300"
+            // "shadow-[0_10px_15px_-3px_rgba(0,0,0,0.08),0_4px_6px_-4px_rgba(0,0,0,0.05)] hover:border-neutral-300"
           }`}
       >
         {attachments.length > 0 && (

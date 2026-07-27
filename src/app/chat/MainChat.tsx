@@ -35,7 +35,6 @@ export default function MainChat() {
   }, [sessions, chatId]);
 
   const currentMessages = chatId ? sessions[chatId] || [] : [];
-
   const handleSendMessage = (text: string) => {
     if (!chatId || !text.trim()) return;
 
@@ -122,9 +121,11 @@ If you'd like, I can also provide the same example in **Python**, **TypeScript**
     <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white h-screen relative">
       {/* Scrollable conversation area */}
       <div className="flex-1 overflow-y-auto w-full">
-        {currentMessages.length > 0 && (
-          <ChatConversation messages={currentMessages} />
-        )}
+        <div className="w-full flex justify-center">
+          {currentMessages.length > 0 && (
+            <ChatConversation messages={currentMessages} />
+          )}
+        </div>
         <div ref={messagesEndRef} />
       </div>
 
