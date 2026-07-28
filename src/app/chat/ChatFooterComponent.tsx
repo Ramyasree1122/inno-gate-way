@@ -20,12 +20,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { chatService } from "@/services/chatService";
 
 export default function ChatFooterComponent() {
   const { user, logout } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [apiKey, setApiKey] = useState("");
-  const [providers, setProviders] = useState<{ id: string; name: string; providerId?: string }[]>([]);
+  const [providers, setProviders] = useState<
+    { id: string; name: string; providerId?: string }[]
+  >([]);
   const [selectedProvider, setSelectedProvider] = useState("");
 
   useEffect(() => {
@@ -34,8 +37,12 @@ export default function ChatFooterComponent() {
         try {
           const response: any = await get(API_ENDPOINTS.AUTH.PROVIDERS);
           const data = response?.data || response || [];
-          
-          const formattedProviders: { id: string; name: string; providerId?: string }[] = [];
+
+          const formattedProviders: {
+            id: string;
+            name: string;
+            providerId?: string;
+          }[] = [];
           data.forEach((provider: any) => {
             if (provider.models && provider.models.length > 0) {
               provider.models.forEach((model: any) => {
@@ -53,7 +60,7 @@ export default function ChatFooterComponent() {
               });
             }
           });
-          
+
           setProviders(formattedProviders);
         } catch (error) {
           console.error("Failed to fetch providers", error);
@@ -65,28 +72,47 @@ export default function ChatFooterComponent() {
 
   const handleValidate = async () => {
     if (!selectedProvider || !apiKey) return;
-    
-    const selectedObj = providers.find((p) => (p.id || p.name) === selectedProvider);
+
+    const selectedObj = providers.find(
+      (p) => (p.id || p.name) === selectedProvider,
+    );
     const providerToValidate = selectedObj?.providerId || selectedProvider;
 
     try {
-      const response: any = await get(API_ENDPOINTS.AUTH.VALIDATE(providerToValidate), {
-        headers: {
-          Authorization: `Bearer ${apiKey}`
-        }
-      });
-      
-      console.log("Validation response:", response);
+      const response: any = await get(
+        API_ENDPOINTS.AUTH.VALIDATE(providerToValidate),
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+          },
+        },
+      );
       if (response?.allowed) {
-        window.dispatchEvent(new CustomEvent("gatewayValidationStatus", { detail: { allowed: true } }));
+        localStorage.setItem("AI_ID", apiKey);
+        // Fetch authenticated user information
+        const userInfo = await chatService.getUserInfo();
+        window.localStorage.setItem("USER_ID", userInfo?.owner_user_id);
+        window.dispatchEvent(
+          new CustomEvent("gatewayValidationStatus", {
+            detail: { allowed: true },
+          }),
+        );
         setIsModalOpen(false);
       } else {
-        window.dispatchEvent(new CustomEvent("gatewayValidationStatus", { detail: { allowed: false } }));
+        window.dispatchEvent(
+          new CustomEvent("gatewayValidationStatus", {
+            detail: { allowed: false },
+          }),
+        );
         alert("Validation failed: " + (response?.reason || "Unknown reason"));
       }
     } catch (error) {
       console.error("Validation failed", error);
-      window.dispatchEvent(new CustomEvent("gatewayValidationStatus", { detail: { allowed: false } }));
+      window.dispatchEvent(
+        new CustomEvent("gatewayValidationStatus", {
+          detail: { allowed: false },
+        }),
+      );
       alert("Validation failed. Please check the console for details.");
     }
   };
@@ -152,11 +178,11 @@ export default function ChatFooterComponent() {
             >
               <X size={20} strokeWidth={2.5} />
             </button>
-            
+
             <h2 className="text-[13px] font-semibold text-neutral-900 mb-4">
               Gateway API Key
             </h2>
-            
+
             <div className="mb-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -165,11 +191,18 @@ export default function ChatFooterComponent() {
                     className="flex h-9 w-[352px] cursor-pointer items-center justify-between gap-1 rounded-[4px] border border-[#E5E7EB] bg-white px-3 text-[13px] font-normal text-black shadow-none outline-none transition-colors hover:border-neutral-300"
                   >
                     <span className="truncate">
-                      {providers.find((p) => (p.id || p.name) === selectedProvider)?.name || 
-                       providers.find((p) => (p.id || p.name) === selectedProvider)?.id || 
-                       "Select Provider"}
+                      {providers.find(
+                        (p) => (p.id || p.name) === selectedProvider,
+                      )?.name ||
+                        providers.find(
+                          (p) => (p.id || p.name) === selectedProvider,
+                        )?.id ||
+                        "Select Provider"}
                     </span>
-                    <ChevronDown className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                    <ChevronDown
+                      className="h-4 w-4 text-neutral-400"
+                      strokeWidth={2}
+                    />
                   </button>
                 </DropdownMenuTrigger>
 
@@ -201,14 +234,17 @@ export default function ChatFooterComponent() {
                       );
                     })
                   ) : (
-                    <DropdownMenuItem disabled className="px-2 py-2 text-[13px] text-neutral-400">
+                    <DropdownMenuItem
+                      disabled
+                      className="px-2 py-2 text-[13px] text-neutral-400"
+                    >
                       Loading providers...
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            
+
             <input
               type="text"
               placeholder="Please Enter API Keys"
@@ -216,7 +252,7 @@ export default function ChatFooterComponent() {
               onChange={(e) => setApiKey(e.target.value)}
               className="w-full rounded-[4px] border border-[#E5E7EB] px-3 py-[6px] text-[13px] placeholder:text-neutral-400 outline-none focus:border-[var(--color-brand-purple)] focus:ring-1 focus:ring-[var(--color-brand-purple)] mb-5"
             />
-            
+
             <button
               onClick={handleValidate}
               className="self-start rounded-[6px] bg-[linear-gradient(90deg,#AC6AEE_0%,#3D30F4_100%)] px-8 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity"

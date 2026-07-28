@@ -14,19 +14,17 @@ axiosInstance.interceptors.request.use(
   (config) => {
     // Inject authorization tokens here if they exist
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      console.log('AXIOS INTERCEPTOR: token in localstorage =', token);
+      const token = localStorage.getItem("token");
       if (token) {
-        if (config.headers && typeof config.headers.set === 'function') {
-          if (!config.headers.has('Authorization')) {
-            config.headers.set('Authorization', `Bearer ${token}`);
-            console.log('AXIOS INTERCEPTOR: set via .set()');
+        if (config.headers && typeof config.headers.set === "function") {
+          if (!config.headers.has("Authorization")) {
+            config.headers.set("Authorization", `Bearer ${token}`);
           }
         } else {
           config.headers = config.headers || {};
-          if (!config.headers['Authorization']) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-            console.log('AXIOS INTERCEPTOR: set via bracket notation');
+          if (!config.headers["Authorization"]) {
+            config.headers["Authorization"] = `Bearer ${token}`;
+            console.log("AXIOS INTERCEPTOR: set via bracket notation");
           }
         }
       }
