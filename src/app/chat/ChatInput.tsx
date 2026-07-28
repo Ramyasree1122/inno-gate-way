@@ -1,15 +1,22 @@
 "use client";
 import { useState, useRef } from "react";
-import { ArrowUp, Plus, X, FileText, FileSpreadsheet } from "lucide-react";
+import {
+  ArrowUp,
+  Plus,
+  X,
+  FileText,
+  FileSpreadsheet,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const models = [
   {
@@ -17,12 +24,12 @@ const models = [
     label: "Qwen Coder 30B",
   },
   {
-    value: "Llama 3.3",
-    label: "Llama 3.3",
+    value: "Claude Haiku 4.5",
+    label: "Claude Haiku 4.5",
   },
   {
-    value: "GPT-4.1",
-    label: "GPT-4.1",
+    value: "Claude Sonnet",
+    label: "Claude Sonnet",
   },
 ];
 
@@ -50,6 +57,7 @@ export default function ChatInput({
 }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [selectedModel, setSelectedModel] = useState(models[0]);
 
   const handleUploadClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -235,22 +243,40 @@ export default function ChatInput({
                 />
               </>
 
-              <Select defaultValue={models[0].value}>
-                <SelectTrigger className="h-8 w-[150px] cursor-pointer gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none hover:bg-neutral-200">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent side="bottom" sideOffset={6} align="start">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex h-8 w-[150px] cursor-pointer items-center justify-between gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none outline-none transition-colors hover:bg-neutral-200"
+                  >
+                    <span className="truncate">{selectedModel.label}</span>
+                    <ChevronDown className="h-4 w-4" strokeWidth={2} />
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                  align="start"
+                  sideOffset={6}
+                  className="w-[150px] rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
+                >
                   {models.map((model) => (
-                    <SelectItem
+                    <DropdownMenuItem
                       key={model.value}
-                      value={model.value}
-                      className="text-sm font-normal text-[#0A0A0A]"
+                      onClick={() => setSelectedModel(model)}
+                      className="flex cursor-pointer items-center justify-between rounded-sm px-2 py-2 text-sm font-normal text-black focus:bg-neutral-100"
                     >
-                      {model.label}
-                    </SelectItem>
+                      <span>{model.label}</span>
+
+                      {selectedModel.value === model.value && (
+                        <Check
+                          className="h-4 w-4 text-primary"
+                          strokeWidth={2}
+                        />
+                      )}
+                    </DropdownMenuItem>
                   ))}
-                </SelectContent>
-              </Select>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
