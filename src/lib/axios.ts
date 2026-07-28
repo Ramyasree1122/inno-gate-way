@@ -18,12 +18,16 @@ axiosInstance.interceptors.request.use(
       console.log('AXIOS INTERCEPTOR: token in localstorage =', token);
       if (token) {
         if (config.headers && typeof config.headers.set === 'function') {
-          config.headers.set('Authorization', `Bearer ${token}`);
-          console.log('AXIOS INTERCEPTOR: set via .set()');
+          if (!config.headers.has('Authorization')) {
+            config.headers.set('Authorization', `Bearer ${token}`);
+            console.log('AXIOS INTERCEPTOR: set via .set()');
+          }
         } else {
           config.headers = config.headers || {};
-          config.headers['Authorization'] = `Bearer ${token}`;
-          console.log('AXIOS INTERCEPTOR: set via bracket notation');
+          if (!config.headers['Authorization']) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+            console.log('AXIOS INTERCEPTOR: set via bracket notation');
+          }
         }
       }
     }
