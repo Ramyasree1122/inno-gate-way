@@ -1,10 +1,22 @@
 import { API_ENDPOINTS } from "@/shared/constants/apiEndpoints";
 import { axiosInstance } from "@/lib/axios";
 
-const USER_ID = "4502d331-0516-4725-a61e-e10f815ecf96";
-const AI_ID = "inno_ai_sk_aORlR16Yg3_pZ-U_8GGpBQx84qUD_iIb_1784896189";
+const USER_ID = window.localStorage.getItem("USER_ID");
+const AI_ID = window.localStorage.getItem("AI_ID");
 
 export const chatService = {
+  getUserInfo: async () => {
+    try {
+      const response = await axiosInstance.get(API_ENDPOINTS.GET_USER_INFO, {
+        headers: {
+          Authorization: `Bearer ${AI_ID}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching usage:", error);
+    }
+  },
   getCheckUsage: async () => {
     try {
       const response = await axiosInstance.get(
@@ -15,19 +27,19 @@ export const chatService = {
       console.error("Error fetching usage:", error);
     }
   },
-  getChatSessions:async ()=>{
-    try{
-        const response = await axiosInstance.get(
-          `${API_ENDPOINTS.GET_CHAT_SESSIONS}?include_archived=false`,
-          {
-            headers: {
-              Authorization: `Bearer ${AI_ID}`,
-            },
+  getChatSessions: async () => {
+    try {
+      const response = await axiosInstance.get(
+        `${API_ENDPOINTS.GET_CHAT_SESSIONS}?include_archived=false`,
+        {
+          headers: {
+            Authorization: `Bearer ${AI_ID}`,
           },
-        );
-        return response.data
+        },
+      );
+      return response.data;
     } catch (error) {
       console.error("Error fetching usage:", error);
     }
-  }
+  },
 };
