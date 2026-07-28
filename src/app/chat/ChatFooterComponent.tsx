@@ -78,12 +78,15 @@ export default function ChatFooterComponent() {
       
       console.log("Validation response:", response);
       if (response?.allowed) {
+        window.dispatchEvent(new CustomEvent("gatewayValidationStatus", { detail: { allowed: true } }));
         setIsModalOpen(false);
       } else {
+        window.dispatchEvent(new CustomEvent("gatewayValidationStatus", { detail: { allowed: false } }));
         alert("Validation failed: " + (response?.reason || "Unknown reason"));
       }
     } catch (error) {
       console.error("Validation failed", error);
+      window.dispatchEvent(new CustomEvent("gatewayValidationStatus", { detail: { allowed: false } }));
       alert("Validation failed. Please check the console for details.");
     }
   };

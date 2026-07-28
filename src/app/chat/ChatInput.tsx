@@ -47,6 +47,7 @@ export default function ChatInput({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [models, setModels] = useState<{ value: string; label: string }[]>([]);
   const [selectedModel, setSelectedModel] = useState<{ value: string; label: string } | null>(null);
+  const [isAllowed, setIsAllowed] = useState(false);
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -79,6 +80,22 @@ export default function ChatInput({
     };
     fetchProviders();
   }, []);
+
+  useEffect(() => {
+    const handleStatusChange = (e: any) => {
+      setIsAllowed(!!e.detail?.allowed);
+    };
+    window.addEventListener("gatewayValidationStatus", handleStatusChange);
+    return () => window.removeEventListener("gatewayValidationStatus", handleStatusChange);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      attachments.forEach((att) => {
+        if (att.previewUrl) URL.revokeObjectURL(att.previewUrl);
+      });
+    };
+  }, [attachments]);
 
   const handleUploadClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -140,8 +157,7 @@ export default function ChatInput({
     });
   };
 
-  const isSendDisabled =
-    (message ?? "").trim().length === 0 && attachments.length === 0;
+  const isSendDisabled = !isAllowed || ((message ?? "").trim().length === 0 && attachments.length === 0);
 
   const handleSend = () => {
     if (isSendDisabled) return;
@@ -235,11 +251,12 @@ export default function ChatInput({
         <div className="flex items-start">
           <div className="flex-1 flex flex-col">
             <Textarea
-              placeholder="Ask anything..."
+              placeholder={isAllowed ? "Ask anything..." : "API key required..."}
               value={message}
+              disabled={!isAllowed}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-h-[40px] w-full resize-none border-0 p-0 text-base shadow-none outline-none focus-visible:ring-0 focus-visible:border-0 placeholder:text-[#767586] bg-transparent"
+              className="min-h-[40px] w-full resize-none border-0 p-0 text-base shadow-none outline-none focus-visible:ring-0 focus-visible:border-0 placeholder:text-[#767586] bg-transparent disabled:bg-transparent disabled:opacity-50"
             />
 
             <div className="mt-3 flex items-center gap-2">
@@ -248,8 +265,9 @@ export default function ChatInput({
                   type="button"
                   variant="secondary"
                   size="icon"
+                  disabled={!isAllowed}
                   onClick={handleUploadClick}
-                  className="h-8 w-10 rounded-md bg-neutral-100 text-black border-0 shadow-none cursor-pointer"
+                  className="h-8 w-10 rounded-md bg-neutral-100 text-black border-0 shadow-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="h-4 w-4" strokeWidth={2} />
                 </Button>
