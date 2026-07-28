@@ -31,6 +31,7 @@ export function UserLoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const { loginUser, isLoading } = useAuth();
 
   const emailForm = useRHForm<EmailFormValues>({
@@ -47,8 +48,20 @@ export function UserLoginForm() {
 
   const onEmailSubmit = async (data: EmailFormValues) => {
     setError("");
-    setEmail(data.email);
-    setStep("otp");
+    setIsRequestingOtp(true);
+    try {
+      await authService.requestOTP(data.email);
+      setEmail(data.email);
+      setStep("otp");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to request OTP");
+      }
+    } finally {
+      setIsRequestingOtp(false);
+    }
   };
 
   const onOtpSubmit = async (data: OtpFormValues) => {
@@ -64,9 +77,7 @@ export function UserLoginForm() {
       }
     }
   };
-  useEffect(() => {
-    authService.testOpenGetApi();
-  }, []);
+
   useEffect(() => {
     if (step === "success") {
       const timer = setTimeout(() => {
@@ -127,14 +138,21 @@ export function UserLoginForm() {
 
               <button
                 type="submit"
-                disabled={!emailForm.formState.isValid}
+                disabled={!emailForm.formState.isValid || isRequestingOtp}
                 className={`inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none h-10 px-4 py-2 w-full mt-2 ${
                   hasEmailValue
                     ? "bg-gradient-to-r from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] text-white hover:opacity-90"
                     : "bg-zinc-400 text-white"
                 }`}
               >
-                Continue
+                {isRequestingOtp ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Continue"
+                )}
               </button>
             </form>
           </div>

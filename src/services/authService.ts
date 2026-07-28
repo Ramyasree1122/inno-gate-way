@@ -1,20 +1,5 @@
 import { get, post } from '@/lib/axios';
-
-/**
- * A test function to verify that our GET API method is working correctly.
- * It hits a free, open public API and logs the response to the console.
- */
-export const testOpenGetApi = async () => {
-  try {
-    console.log('Calling open test API...');
-    const response = await get('https://jsonplaceholder.typicode.com/todos/1');
-    console.log('✅ Open API Test Success! Response:', response);
-    return response;
-  } catch (error) {
-    console.error('❌ Open API Test Failed:', error);
-    throw error;
-  }
-};
+import { API_ENDPOINTS } from '@/shared/constants/apiEndpoints';
 
 /**
  * Authentication Service
@@ -22,13 +7,22 @@ export const testOpenGetApi = async () => {
  */
 export const authService = {
   /**
+   * Request OTP
+   * Sends an OTP to the provided email.
+   */
+  requestOTP: async (email: string) => {
+    console.log(`Requesting OTP for email: ${email}`);
+    return post(API_ENDPOINTS.AUTH.REQUEST_OTP, { email });
+  },
+
+  /**
    * Login user with OTP
    * Replace the endpoint with your actual backend URL when ready.
    */
   loginUser: async (email: string, otp: string) => {
     console.log(`Sending login request for email: ${email}`);
-    // TODO: Replace with your actual backend endpoint
-    // return post('/api/v1/auth/login', { email, otp });
+    // The backend expects the OTP to be sent in the 'code' field
+    return post(API_ENDPOINTS.AUTH.VERIFY_OTP, { email, code: otp });
   },
 
   /**
@@ -37,9 +31,6 @@ export const authService = {
   loginAdmin: async (email: string, password: string) => {
     console.log(`Sending admin login request for email: ${email}`);
     // TODO: Replace with your actual backend endpoint
-    // return post('/api/v1/admin/login', { email, password });
+    // return post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, { email, password });
   },
-  
-  // Expose the test function on the service for easy importing
-  testOpenGetApi,
 };
