@@ -3,5 +3,6 @@ export const API_ENDPOINTS = {
     REQUEST_OTP: '/api/auth/otp/request',
     VERIFY_OTP: '/api/auth/otp/verify',
     PROVIDERS:  '/api/providers',
+    VALIDATE: (provider: string) => `/api/providers/${provider}/validate`,
   },
 };
