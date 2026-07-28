@@ -12,11 +12,21 @@ export const axiosInstance: AxiosInstance = axios.create({
 // Add a request interceptor for tokens if needed
 axiosInstance.interceptors.request.use(
   (config) => {
-    // You can inject authorization tokens here
-    // const token = localStorage.getItem('token');
-    // if (token && config.headers) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    // Inject authorization tokens here if they exist
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      console.log('AXIOS INTERCEPTOR: token in localstorage =', token);
+      if (token) {
+        if (config.headers && typeof config.headers.set === 'function') {
+          config.headers.set('Authorization', `Bearer ${token}`);
+          console.log('AXIOS INTERCEPTOR: set via .set()');
+        } else {
+          config.headers = config.headers || {};
+          config.headers['Authorization'] = `Bearer ${token}`;
+          console.log('AXIOS INTERCEPTOR: set via bracket notation');
+        }
+      }
+    }
     return config;
   },
   (error) => {
