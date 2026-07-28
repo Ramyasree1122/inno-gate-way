@@ -13,23 +13,21 @@ export default function ChatFooterComponent() {
 
   return (
     <div className="flex rounded-b-sm bg-gray-100">
-      <div className="flex w-full items-center justify-between p-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-400">
+      <div className="flex w-full items-center justify-between p-3 min-w-0 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-400">
             <span className="text-sm font-semibold text-white">
               {user?.email?.[0]?.toUpperCase() || "U"}
             </span>
           </div>
 
-          <p className="text-xs font-normal text-neutral-900">
+          <p className="text-xs font-normal text-neutral-900 truncate">
             {user?.email || "johndoe@innogateway.com"}
           </p>
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="rounded-md p-1 hover:bg-neutral-200">
-              <ChevronDown size={18} />
-            </button>
+          <DropdownMenuTrigger className="rounded-md p-1 hover:bg-neutral-200 focus:outline-none">
+            <ChevronDown size={18} />
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
