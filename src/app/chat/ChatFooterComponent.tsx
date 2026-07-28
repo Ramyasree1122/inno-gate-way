@@ -25,7 +25,7 @@ export default function ChatFooterComponent() {
   const { user, logout } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [apiKey, setApiKey] = useState("");
-  const [providers, setProviders] = useState<{ id: string; name: string }[]>([]);
+  const [providers, setProviders] = useState<{ id: string; name: string; providerId?: string }[]>([]);
   const [selectedProvider, setSelectedProvider] = useState("");
 
   useEffect(() => {
@@ -35,19 +35,21 @@ export default function ChatFooterComponent() {
           const response: any = await get(API_ENDPOINTS.AUTH.PROVIDERS);
           const data = response?.data || response || [];
           
-          const formattedProviders: { id: string; name: string }[] = [];
+          const formattedProviders: { id: string; name: string; providerId?: string }[] = [];
           data.forEach((provider: any) => {
             if (provider.models && provider.models.length > 0) {
               provider.models.forEach((model: any) => {
                 formattedProviders.push({
                   id: model.id,
                   name: model.display_name || model.id,
+                  providerId: provider.id,
                 });
               });
             } else {
               formattedProviders.push({
                 id: provider.id || provider.name,
                 name: provider.name || provider.id,
+                providerId: provider.id,
               });
             }
           });
@@ -61,10 +63,29 @@ export default function ChatFooterComponent() {
     }
   }, [isModalOpen]);
 
-  const handleValidate = () => {
-    // Add logic to save/validate the API key here
-    console.log("Validating API Key:", apiKey);
-    setIsModalOpen(false);
+  const handleValidate = async () => {
+    if (!selectedProvider || !apiKey) return;
+    
+    const selectedObj = providers.find((p) => (p.id || p.name) === selectedProvider);
+    const providerToValidate = selectedObj?.providerId || selectedProvider;
+
+    try {
+      const response: any = await get(API_ENDPOINTS.AUTH.VALIDATE(providerToValidate), {
+        headers: {
+          Authorization: `Bearer ${apiKey}`
+        }
+      });
+      
+      console.log("Validation response:", response);
+      if (response?.allowed) {
+        setIsModalOpen(false);
+      } else {
+        alert("Validation failed: " + (response?.reason || "Unknown reason"));
+      }
+    } catch (error) {
+      console.error("Validation failed", error);
+      alert("Validation failed. Please check the console for details.");
+    }
   };
 
   return (
