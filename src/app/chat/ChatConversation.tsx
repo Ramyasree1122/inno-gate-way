@@ -50,7 +50,13 @@ interface ChatConversationProps {
   messages: Message[];
 }
 
-export default function ChatConversation({ messages }: ChatConversationProps) {
+interface CodeBlockProps {
+  language: string;
+  codeText: string;
+  [key: string]: any;
+}
+
+const CodeBlock = ({ language, codeText, ...props }: CodeBlockProps) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = (code: string) => {
@@ -58,6 +64,53 @@ export default function ChatConversation({ messages }: ChatConversationProps) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  return (
+    <div className="my-4 overflow-hidden rounded-3xl bg-[#F3F3F3]">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 pt-5 pb-2 select-none">
+        <div className="flex items-center gap-2 text-neutral-900">
+          <CodeXml
+            size={16}
+            strokeWidth={1.8}
+            className="text-neutral-700"
+          />
+          <span className="text-sm font-medium capitalize">
+            {language}
+          </span>
+        </div>
+
+        <button
+          onClick={() => handleCopy(codeText)}
+          className="cursor-pointer text-neutral-500 hover:text-black transition-colors"
+          title="Copy code"
+        >
+          {copied ? (
+            <Check
+              size={16}
+              strokeWidth={1.8}
+              className="text-green-600"
+            />
+          ) : (
+            <Copy size={16} strokeWidth={1.8} />
+          )}
+        </button>
+      </div>
+
+      {/* Syntax Highlighted Code */}
+      <SyntaxHighlighter
+        style={customPrismTheme}
+        language={language}
+        PreTag="div"
+        {...props}
+      >
+        {codeText}
+      </SyntaxHighlighter>
+    </div>
+  );
+};
+
+export default function ChatConversation({ messages }: ChatConversationProps) {
 
   return (
     <div className="w-[55%] max-w-[1100px] py-8 flex flex-col gap-6">
@@ -139,47 +192,11 @@ export default function ChatConversation({ messages }: ChatConversationProps) {
 
                   if (match) {
                     return (
-                      <div className="my-4 overflow-hidden rounded-3xl bg-[#F3F3F3]">
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-6 pt-5 pb-2 select-none">
-                          <div className="flex items-center gap-2 text-neutral-900">
-                            <CodeXml
-                              size={16}
-                              strokeWidth={1.8}
-                              className="text-neutral-700"
-                            />
-                            <span className="text-sm font-medium capitalize">
-                              {language}
-                            </span>
-                          </div>
-
-                          <button
-                            onClick={() => handleCopy(codeText)}
-                            className="cursor-pointer text-neutral-500 hover:text-black transition-colors"
-                            title="Copy code"
-                          >
-                            {copied ? (
-                              <Check
-                                size={16}
-                                strokeWidth={1.8}
-                                className="text-green-600"
-                              />
-                            ) : (
-                              <Copy size={16} strokeWidth={1.8} />
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Syntax Highlighted Code */}
-                        <SyntaxHighlighter
-                          style={customPrismTheme}
-                          language={language}
-                          PreTag="div"
-                          {...props}
-                        >
-                          {codeText}
-                        </SyntaxHighlighter>
-                      </div>
+                      <CodeBlock
+                        language={language}
+                        codeText={codeText}
+                        {...props}
+                      />
                     );
                   }
 
