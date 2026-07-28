@@ -2,14 +2,15 @@
 
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { LogOut, MessageSquare, Users } from 'lucide-react';
-import Link from 'next/link';
-import SvgIcon from '@/components/svgIcons';
-import CheckUsageBalanceComponent from './CheckUsageBalanceComponent';
-import ChatComponent from './ChatComponent';
-import ChatFooterComponent from './ChatFooterComponent';
-import MainChat from './MainChat';
+import { useEffect, useState } from "react";
+import { LogOut, MessageSquare, Users } from "lucide-react";
+import Link from "next/link";
+import SvgIcon from "@/components/svgIcons";
+import CheckUsageBalanceComponent from "./CheckUsageBalanceComponent";
+import ChatComponent from "./ChatComponent";
+import ChatFooterComponent from "./ChatFooterComponent";
+import MainChat from "./MainChat";
+import { chatService } from "@/services/chatService";
 
 export default function DashboardLayout({
   children,
@@ -18,10 +19,18 @@ export default function DashboardLayout({
 }) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
-
+  const [usageResponse, setUsageResponse] = useState<any[]>([]);
+  useEffect(() => {
+    chatService.getCheckUsage().then((response) => {
+      setUsageResponse(response);
+    });
+    chatService.getChatSessions().then((response) => {
+      console.log(response, "chatsessions");
+    });
+  }, []);
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [isLoading, isAuthenticated, router]);
 
@@ -41,7 +50,7 @@ export default function DashboardLayout({
           <SvgIcon type="radium-ai-icon" width={21} height={23} />
           <span className="text-lg font-semibold pl-1">InnoAIGateway</span>
         </div>
-        <CheckUsageBalanceComponent />
+        <CheckUsageBalanceComponent usageResponse={usageResponse} />
         <ChatComponent />
         <ChatFooterComponent />
       </aside>
@@ -49,3 +58,4 @@ export default function DashboardLayout({
     </div>
   );
 }
+
