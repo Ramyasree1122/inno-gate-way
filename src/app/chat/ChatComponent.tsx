@@ -6,7 +6,18 @@ type Chat = {
   id: string;
   title: string;
 };
-export default function ChatComponent() {
+interface props {
+  chatSessions: [];
+}
+export interface ChatSession {
+  id: string;
+  title: string;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+  last_message_at: string;
+}
+export default function ChatComponent({ chatSessions }) {
   const router = useRouter();
 
   const pathname = usePathname();
@@ -42,13 +53,14 @@ export default function ChatComponent() {
       {/* Recent section */}
       <h3 className="px-2 pb-1 text-sm font-medium">Recents</h3>
       <div className="max-h-87 overflow-y-auto">
-        {chats.map((chat) => {
-          const href = `/chat/${chat.id}`;
+        {chatSessions?.map((chat: ChatSession) => {
+          const href = "";
+          // `/chat/${chat.id}`;
           const isActive = pathname === href;
 
           return (
             <Link
-              key={chat.id}
+              key={chat?.id}
               href={href}
               className={`block rounded-md px-4 mx-2 my-1 py-2 text-xs transition-colors ${
                 isActive
@@ -56,7 +68,7 @@ export default function ChatComponent() {
                   : "text-neutral-900 hover:bg-neutral-100"
               }`}
             >
-              {chat.title}
+              {chat?.title}
             </Link>
           );
         })}

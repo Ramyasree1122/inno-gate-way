@@ -20,12 +20,13 @@ export default function DashboardLayout({
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
   const [usageResponse, setUsageResponse] = useState<any[]>([]);
+  const [chatSessions, setChatSessions] = useState<any[]>([]);
   useEffect(() => {
     chatService.getCheckUsage().then((response) => {
       setUsageResponse(response);
     });
     chatService.getChatSessions().then((response) => {
-      console.log(response, "chatsessions");
+      setChatSessions(response);
     });
   }, []);
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function DashboardLayout({
           <span className="text-lg font-semibold pl-1">InnoAIGateway</span>
         </div>
         <CheckUsageBalanceComponent usageResponse={usageResponse} />
-        <ChatComponent />
+        <ChatComponent chatSessions={chatSessions} />
         <ChatFooterComponent />
       </aside>
       <MainChat />
