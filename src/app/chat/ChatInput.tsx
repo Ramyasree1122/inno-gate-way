@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ArrowUp,
   Plus,
@@ -17,21 +17,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { get } from "@/lib/axios";
+import { API_ENDPOINTS } from "@/shared/constants/apiEndpoints";
 
-const models = [
-  {
-    value: "Qwen Coder 30B",
-    label: "Qwen Coder 30B",
-  },
-  {
-    value: "Claude Haiku 4.5",
-    label: "Claude Haiku 4.5",
-  },
-  {
-    value: "Claude Sonnet",
-    label: "Claude Sonnet",
-  },
-];
 
 interface Attachment {
   id: string;
@@ -57,7 +45,40 @@ export default function ChatInput({
 }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [selectedModel, setSelectedModel] = useState(models[0]);
+  const [models, setModels] = useState<{ value: string; label: string }[]>([]);
+  const [selectedModel, setSelectedModel] = useState<{ value: string; label: string } | null>(null);
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const response: any = await get(API_ENDPOINTS.AUTH.PROVIDERS);
+        const data = response?.data || response || [];
+        const formattedModels: { value: string; label: string }[] = [];
+        data.forEach((provider: any) => {
+          if (provider.models && provider.models.length > 0) {
+            provider.models.forEach((model: any) => {
+              formattedModels.push({
+                value: model.id,
+                label: model.display_name || model.id,
+              });
+            });
+          } else {
+            formattedModels.push({
+              value: provider.id || provider.name,
+              label: provider.name || provider.id,
+            });
+          }
+        });
+        setModels(formattedModels);
+        if (formattedModels.length > 0) {
+          setSelectedModel(formattedModels[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch models", error);
+      }
+    };
+    fetchProviders();
+  }, []);
 
   const handleUploadClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -244,12 +265,12 @@ export default function ChatInput({
               </>
 
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger>
                   <button
                     type="button"
                     className="flex h-8 w-[150px] cursor-pointer items-center justify-between gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none outline-none transition-colors hover:bg-neutral-200"
                   >
-                    <span className="truncate">{selectedModel.label}</span>
+                    <span className="truncate">{selectedModel?.label || "Loading..."}</span>
                     <ChevronDown className="h-4 w-4" strokeWidth={2} />
                   </button>
                 </DropdownMenuTrigger>
@@ -259,22 +280,28 @@ export default function ChatInput({
                   sideOffset={6}
                   className="w-[150px] rounded-md border border-neutral-200 bg-white p-1 shadow-lg"
                 >
-                  {models.map((model) => (
-                    <DropdownMenuItem
-                      key={model.value}
-                      onClick={() => setSelectedModel(model)}
-                      className="flex cursor-pointer items-center justify-between rounded-sm px-2 py-2 text-sm font-normal text-black focus:bg-neutral-100"
-                    >
-                      <span>{model.label}</span>
+                  {models.length > 0 ? (
+                    models.map((model) => (
+                      <DropdownMenuItem
+                        key={model.value}
+                        onClick={() => setSelectedModel(model)}
+                        className="flex cursor-pointer items-center justify-between rounded-sm px-2 py-2 text-sm font-normal text-black focus:bg-neutral-100"
+                      >
+                        <span>{model.label}</span>
 
-                      {selectedModel.value === model.value && (
-                        <Check
-                          className="h-4 w-4 text-primary"
-                          strokeWidth={2}
-                        />
-                      )}
+                        {selectedModel?.value === model.value && (
+                          <Check
+                            className="h-4 w-4 text-primary"
+                            strokeWidth={2}
+                          />
+                        )}
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled className="px-2 py-2 text-sm text-neutral-400">
+                      Loading...
                     </DropdownMenuItem>
-                  ))}
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

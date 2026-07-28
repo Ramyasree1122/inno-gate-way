@@ -25,13 +25,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginUser = async (email: string, otp: string) => {
     setIsLoading(true);
     try {
-      const response = await authService.loginUser(email, otp);
+      const response: any = await authService.loginUser(email, otp);
       // Update this later if the backend returns actual user details (like name/role)
-      const userObj: User = { id: '1', email, role: 'User', name: 'Demo User' };
+      const userObj: User = { id: '1', email: response?.email || email, role: response?.role || 'User', name: 'Demo User' };
       setUser(userObj);
       localStorage.setItem('mockUser', JSON.stringify(userObj));
-      // If a token is returned, you can save it here:
-      // localStorage.setItem('token', response.token || response.data?.token);
+      // If a token is returned, save it here so it can be sent in subsequent requests
+      if (response?.access_token || response?.data?.access_token) {
+        localStorage.setItem('token', response.access_token || response.data.access_token);
+      }
     } catch (error) {
       setIsLoading(false);
       throw error;
