@@ -1,8 +1,8 @@
 'use client';
 
 import { useAuth } from '@/components/providers/AuthProvider';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from "react";
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState, useRef } from "react";
 import { LogOut, MessageSquare, Users } from "lucide-react";
 import Link from "next/link";
 import SvgIcon from "@/components/svgIcons";
@@ -19,10 +19,23 @@ export default function DashboardLayout({
 }) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const hasAutoRedirected = useRef(false);
   const [usageResponse, setUsageResponse] = useState<any[]>([]);
   const [chatSessions, setChatSessions] = useState<any[]>([]);
   const [allowed, setAllowed] = useState<boolean>(false);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
 
+  useEffect(() => {
+    if (chatSessions && chatSessions.length > 0) {
+      if (pathname === "/chat" && !hasAutoRedirected.current) {
+        hasAutoRedirected.current = true;
+        router.push(`/chat/${chatSessions[0].id}`);
+      } else {
+        hasAutoRedirected.current = true;
+      }
+    }
+  }, [chatSessions, pathname, router]);
   const fetchData = () => {
     chatService.getCheckUsage().then((response) => {
       setUsageResponse(response);
@@ -37,14 +50,20 @@ export default function DashboardLayout({
 
     const handleValidationStatus = (event: Event) => {
       const customEvent = event as CustomEvent;
-      if (customEvent.detail && typeof customEvent.detail.allowed === "boolean") {
+      if (
+        customEvent.detail &&
+        typeof customEvent.detail.allowed === "boolean"
+      ) {
         setAllowed(customEvent.detail.allowed);
       }
     };
 
     window.addEventListener("gatewayValidationStatus", handleValidationStatus);
     return () => {
-      window.removeEventListener("gatewayValidationStatus", handleValidationStatus);
+      window.removeEventListener(
+        "gatewayValidationStatus",
+        handleValidationStatus,
+      );
     };
   }, []);
 
@@ -77,10 +96,13 @@ export default function DashboardLayout({
           <span className="text-lg font-semibold pl-1">InnoAIGateway</span>
         </div>
         <CheckUsageBalanceComponent usageResponse={usageResponse} />
-        <ChatComponent chatSessions={chatSessions} />
+        <ChatComponent
+          chatSessions={chatSessions}
+          setChatMessages={setChatMessages}
+        />
         <ChatFooterComponent />
       </aside>
-      <MainChat />
+      <MainChat chatMessages={chatMessages} />
     </div>
   );
 }

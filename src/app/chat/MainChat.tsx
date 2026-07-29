@@ -5,19 +5,30 @@ import ChatInput from "./ChatInput";
 import ChatConversation from "./ChatConversation";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import { chatService } from "@/services/chatService";
 
 interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: string;
   content: string;
+  model?: string | null;
+  provider?: string | null;
 }
 
-export default function MainChat() {
+interface ChatMessages {
+  id: string;
+  title: string;
+  messages: Message[];
+}
+
+interface props {
+  chatMessages: ChatMessages | null;
+}
+
+export default function MainChat({ chatMessages }: props) {
   const pathname = usePathname();
   const [messageText, setMessageText] = useState("");
-
-  // Track messages per chatId
-  const [sessions, setSessions] = useState<Record<string, Message[]>>({});
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Get current chatId from pathname (e.g. /chat/123 -> 123)
@@ -29,12 +40,28 @@ export default function MainChat() {
     setMessageText("");
   }, [chatId]);
 
+  // Load chat messages based on chatId
+  useEffect(() => {
+    if (chatId) {
+      if (chatMessages && chatMessages.id === chatId) {
+        setLocalMessages(chatMessages.messages || []);
+      } else {
+        chatService.getChatById(chatId).then((response) => {
+          if (response) {
+            setLocalMessages(response.messages || []);
+          }
+        });
+      }
+    } else {
+      setLocalMessages([]);
+    }
+  }, [chatId, chatMessages]);
+
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [sessions, chatId]);
+  }, [localMessages, chatId]);
 
-  const currentMessages = chatId ? sessions[chatId] || [] : [];
   const handleSendMessage = (text: string) => {
     if (!chatId || !text.trim()) return;
 
@@ -42,13 +69,11 @@ export default function MainChat() {
       id: Math.random().toString(36).substring(2, 9),
       role: "user",
       content: text,
+      model: null,
+      provider: null,
     };
 
-    // Update session messages with user message
-    setSessions((prev) => ({
-      ...prev,
-      [chatId]: [...(prev[chatId] || []), userMsg],
-    }));
+    setLocalMessages((prev) => [...prev, userMsg]);
 
     // Mock AI response after a short delay
     setTimeout(() => {
@@ -86,12 +111,11 @@ fetchUsers();
 - Handles errors using \`try...catch\`.
 
 If you'd like, I can also provide the same example in **Python**, **TypeScript**, **React**, or **Next.js**.`,
+        model: "Mock Assistant",
+        provider: "Mock Provider",
       };
 
-      setSessions((prev) => ({
-        ...prev,
-        [chatId]: [...(prev[chatId] || []), aiMsg],
-      }));
+      setLocalMessages((prev) => [...prev, aiMsg]);
     }, 800);
   };
 
@@ -122,8 +146,8 @@ If you'd like, I can also provide the same example in **Python**, **TypeScript**
       {/* Scrollable conversation area */}
       <div className="flex-1 overflow-y-auto w-full">
         <div className="w-full flex justify-center">
-          {currentMessages.length > 0 && (
-            <ChatConversation messages={currentMessages} />
+          {localMessages.length > 0 && (
+            <ChatConversation messages={localMessages} />
           )}
         </div>
         <div ref={messagesEndRef} />

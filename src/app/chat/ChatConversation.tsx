@@ -42,8 +42,10 @@ const customPrismTheme: { [key: string]: React.CSSProperties } = {
 
 interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: string;
   content: string;
+  model?: string | null;
+  provider?: string | null;
 }
 
 interface ChatConversationProps {
@@ -70,14 +72,8 @@ const CodeBlock = ({ language, codeText, ...props }: CodeBlockProps) => {
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-5 pb-2 select-none">
         <div className="flex items-center gap-2 text-neutral-900">
-          <CodeXml
-            size={16}
-            strokeWidth={1.8}
-            className="text-neutral-700"
-          />
-          <span className="text-sm font-medium capitalize">
-            {language}
-          </span>
+          <CodeXml size={16} strokeWidth={1.8} className="text-neutral-700" />
+          <span className="text-sm font-medium capitalize">{language}</span>
         </div>
 
         <button
@@ -86,11 +82,7 @@ const CodeBlock = ({ language, codeText, ...props }: CodeBlockProps) => {
           title="Copy code"
         >
           {copied ? (
-            <Check
-              size={16}
-              strokeWidth={1.8}
-              className="text-green-600"
-            />
+            <Check size={16} strokeWidth={1.8} className="text-green-600" />
           ) : (
             <Copy size={16} strokeWidth={1.8} />
           )}
@@ -111,7 +103,6 @@ const CodeBlock = ({ language, codeText, ...props }: CodeBlockProps) => {
 };
 
 export default function ChatConversation({ messages }: ChatConversationProps) {
-
   return (
     <div className="w-[55%] max-w-[1100px] py-8 flex flex-col gap-6">
       {messages.map((msg) => {
@@ -128,91 +119,81 @@ export default function ChatConversation({ messages }: ChatConversationProps) {
         }
 
         return (
-          <div key={msg.id} className="w-full">
-            <ReactMarkdown
-              components={{
-                // h2: ({ children }) => (
-                //   <h2 className="text-sm font-normal text-neutral-900">
-                //     {children}
-                //   </h2>
-                // ),
-                // p: ({ children }) => {
-                //   // Only render paragraph element if it has non-empty children
-                //   if (!children) return null;
-                //   return (
-                //     <p className="mb-4 text-sm font-normal text-neutral-900">
-                //       {children}
-                //     </p>
-                //   );
-                // },
-                h2: ({ children }) => (
-                  <h2 className="mb-1 text-sm font-semibold text-neutral-900">
-                    {children}
-                  </h2>
-                ),
-
-                h3: ({ children }) => (
-                  <h3 className="mb-1 mt-5 text-sm font-semibold text-neutral-900">
-                    {children}
-                  </h3>
-                ),
-
-                p: ({ children }) => (
-                  <p className="mb-1 text-sm font-normal leading-6 text-neutral-900">
-                    {children}
-                  </p>
-                ),
-
-                strong: ({ children }) => (
-                  <strong className="font-semibold text-neutral-900">
-                    {children}
-                  </strong>
-                ),
-
-                blockquote: ({ children }) => (
-                  <blockquote className="my-3 border-l-2 border-neutral-300 pl-3 text-sm text-neutral-700">
-                    {children}
-                  </blockquote>
-                ),
-
-                ul: ({ children }) => (
-                  <ul className="mb-4 list-disc pl-5 space-y-1">{children}</ul>
-                ),
-
-                li: ({ children }) => (
-                  <li className="text-sm leading-6 text-neutral-900">
-                    {children}
-                  </li>
-                ),
-
-                code({ node, className, children, ...props }) {
-                  const match = /language-(\w+)/.exec(className || "");
-                  const codeText = String(children).replace(/\n$/, "");
-                  const language = match ? match[1] : "";
-
-                  if (match) {
-                    return (
-                      <CodeBlock
-                        language={language}
-                        codeText={codeText}
-                        {...props}
-                      />
-                    );
-                  }
-
-                  return (
-                    <code
-                      className="bg-neutral-100 rounded px-1.5 py-0.5 text-sm font-mono"
-                      {...props}
-                    >
+          <div key={msg.id} className="flex justify-start">
+            <div className="bg-[#F5F5F5] px-4 py-2 rounded-xl max-w-full">
+              <ReactMarkdown
+                components={{
+                  h2: ({ children }) => (
+                    <h2 className="mb-1 text-sm font-semibold text-neutral-900">
                       {children}
-                    </code>
-                  );
-                },
-              }}
-            >
-              {msg.content}
-            </ReactMarkdown>
+                    </h2>
+                  ),
+
+                  h3: ({ children }) => (
+                    <h3 className="mb-1 mt-5 text-sm font-semibold text-neutral-900">
+                      {children}
+                    </h3>
+                  ),
+
+                  p: ({ children }) => (
+                    <p className="mb-1 text-sm font-normal leading-6 text-neutral-900">
+                      {children}
+                    </p>
+                  ),
+
+                  strong: ({ children }) => (
+                    <strong className="font-semibold text-neutral-900">
+                      {children}
+                    </strong>
+                  ),
+
+                  blockquote: ({ children }) => (
+                    <blockquote className="my-3 border-l-2 border-neutral-300 pl-3 text-sm text-neutral-700">
+                      {children}
+                    </blockquote>
+                  ),
+
+                  ul: ({ children }) => (
+                    <ul className="mb-4 list-disc pl-5 space-y-1">
+                      {children}
+                    </ul>
+                  ),
+
+                  li: ({ children }) => (
+                    <li className="text-sm leading-6 text-neutral-900">
+                      {children}
+                    </li>
+                  ),
+
+                  code({ node, className, children, ...props }) {
+                    const match = /language-(\w+)/.exec(className || "");
+                    const codeText = String(children).replace(/\n$/, "");
+                    const language = match ? match[1] : "";
+
+                    if (match) {
+                      return (
+                        <CodeBlock
+                          language={language}
+                          codeText={codeText}
+                          {...props}
+                        />
+                      );
+                    }
+
+                    return (
+                      <code
+                        className="bg-neutral-100 rounded px-1.5 py-0.5 text-sm font-mono"
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    );
+                  },
+                }}
+              >
+                {msg.content}
+              </ReactMarkdown>
+            </div>
           </div>
         );
       })}
