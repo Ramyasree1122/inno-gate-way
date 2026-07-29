@@ -7,7 +7,7 @@ type Chat = {
   title: string;
 };
 interface props {
-  chatSessions: [];
+  chatSessions: ChatSession[];
 }
 export interface ChatSession {
   id: string;
@@ -17,26 +17,15 @@ export interface ChatSession {
   updated_at: string;
   last_message_at: string;
 }
-export default function ChatComponent({ chatSessions }) {
+export default function ChatComponent({ chatSessions }: props) {
   const router = useRouter();
 
   const pathname = usePathname();
 
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: crypto.randomUUID(),
-      title: "Welcome to InnoAIGateway",
-    },
-  ]);
+  const [chats, setChats] = useState<Chat[]>([]);
+
   const handleNewChat = () => {
-    const newChat = {
-      id: crypto.randomUUID(),
-      title: `New Chat ${chats.length}`,
-    };
-
-    setChats((prev) => [newChat, ...prev]);
-
-    router.push(`/chat/${newChat.id}`);
+    router.push(`/chat`);
   };
 
   return (
@@ -55,7 +44,6 @@ export default function ChatComponent({ chatSessions }) {
       <div className="max-h-87 overflow-y-auto">
         {chatSessions?.map((chat: ChatSession) => {
           const href = "";
-          // `/chat/${chat.id}`;
           const isActive = pathname === href;
 
           return (
