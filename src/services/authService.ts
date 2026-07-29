@@ -11,7 +11,6 @@ export const authService = {
    * Sends an OTP to the provided email.
    */
   requestOTP: async (email: string) => {
-    console.log(`Requesting OTP for email: ${email}`);
     return post(API_ENDPOINTS.AUTH.REQUEST_OTP, { email });
   },
 
@@ -20,7 +19,6 @@ export const authService = {
    * Replace the endpoint with your actual backend URL when ready.
    */
   loginUser: async (email: string, otp: string) => {
-    console.log(`Sending login request for email: ${email}`);
     // The backend expects the OTP to be sent in the 'code' field
     return post(API_ENDPOINTS.AUTH.VERIFY_OTP, { email, code: otp });
   },
@@ -29,7 +27,6 @@ export const authService = {
    * Login admin with password
    */
   loginAdmin: async (email: string, password: string) => {
-    console.log(`Sending admin login request for email: ${email}`);
     // TODO: Replace with your actual backend endpoint
     // return post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, { email, password });
   },

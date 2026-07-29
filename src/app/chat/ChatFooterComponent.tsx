@@ -104,11 +104,15 @@ export default function ChatFooterComponent() {
         },
       )) as ValidateResponse | null;
       if (response?.allowed) {
-        localStorage.setItem("AI_ID", apiKey);
-        localStorage.setItem("allowed", "true");
+        window.localStorage.setItem("AI_ID", apiKey);
+        window.localStorage.setItem("allowed", "true");
         // Fetch authenticated user information
         const userInfo = await chatService.getUserInfo();
-        window.localStorage.setItem("USER_ID", userInfo?.owner_user_id);
+        if (userInfo?.owner_user_id) {
+          window.localStorage.setItem("USER_ID", userInfo?.owner_user_id);
+        } else {
+          console.error("owner_user_id not found", userInfo);
+        }
         window.dispatchEvent(
           new CustomEvent("gatewayValidationStatus", {
             detail: { allowed: true },
