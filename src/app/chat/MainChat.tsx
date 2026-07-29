@@ -90,7 +90,8 @@ export default function MainChat({ chatMessages }: props) {
       provider: null,
     };
 
-    setLocalMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...localMessages, userMsg];
+    setLocalMessages(updatedMessages);
 
     try {
       const payload = {
