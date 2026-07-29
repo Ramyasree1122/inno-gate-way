@@ -21,14 +21,39 @@ export default function DashboardLayout({
   const router = useRouter();
   const [usageResponse, setUsageResponse] = useState<any[]>([]);
   const [chatSessions, setChatSessions] = useState<any[]>([]);
-  useEffect(() => {
+  const [allowed, setAllowed] = useState<boolean>(false);
+
+  const fetchData = () => {
     chatService.getCheckUsage().then((response) => {
       setUsageResponse(response);
     });
     chatService.getChatSessions().then((response) => {
       setChatSessions(response);
     });
+  };
+
+  useEffect(() => {
+    setAllowed(localStorage.getItem("allowed") === "true");
+
+    const handleValidationStatus = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && typeof customEvent.detail.allowed === "boolean") {
+        setAllowed(customEvent.detail.allowed);
+      }
+    };
+
+    window.addEventListener("gatewayValidationStatus", handleValidationStatus);
+    return () => {
+      window.removeEventListener("gatewayValidationStatus", handleValidationStatus);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!allowed) return;
+
+    fetchData();
+  }, [allowed]);
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/login");

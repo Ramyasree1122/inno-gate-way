@@ -1,15 +1,13 @@
 import { API_ENDPOINTS } from "@/shared/constants/apiEndpoints";
 import { axiosInstance } from "@/lib/axios";
 
-const USER_ID = window.localStorage.getItem("USER_ID");
-const AI_ID = window.localStorage.getItem("AI_ID");
-
 export const chatService = {
   getUserInfo: async () => {
     try {
+      const aiId = typeof window !== "undefined" ? window.localStorage.getItem("AI_ID") : null;
       const response = await axiosInstance.get(API_ENDPOINTS.GET_USER_INFO, {
         headers: {
-          Authorization: `Bearer ${AI_ID}`,
+          Authorization: `Bearer ${aiId}`,
         },
       });
       return response.data;
@@ -19,8 +17,9 @@ export const chatService = {
   },
   getCheckUsage: async () => {
     try {
+      const userId = typeof window !== "undefined" ? window.localStorage.getItem("USER_ID") : null;
       const response = await axiosInstance.get(
-        API_ENDPOINTS.CHECK_USAGE.replace("{id}", USER_ID),
+        API_ENDPOINTS.CHECK_USAGE.replace("{id}", userId || ""),
       );
       return response.data;
     } catch (error) {
@@ -29,11 +28,12 @@ export const chatService = {
   },
   getChatSessions: async () => {
     try {
+      const aiId = typeof window !== "undefined" ? window.localStorage.getItem("AI_ID") : null;
       const response = await axiosInstance.get(
         `${API_ENDPOINTS.GET_CHAT_SESSIONS}?include_archived=false`,
         {
           headers: {
-            Authorization: `Bearer ${AI_ID}`,
+            Authorization: `Bearer ${aiId}`,
           },
         },
       );

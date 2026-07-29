@@ -29,15 +29,14 @@ export default function ChatComponent({ chatSessions }) {
     },
   ]);
   const handleNewChat = () => {
-    const newChat = {
-      id: crypto.randomUUID(),
-      title: `New Chat ${chats.length}`,
-    };
+    // const newChat = {
+    //   id: crypto.randomUUID(),
+    //   title: `New Chat ${chats.length}`,
+    // };
 
-    setChats((prev) => [newChat, ...prev]);
-
-    router.push(`/chat/${newChat.id}`);
-  };
+    // setChats((prev) => [newChat, ...prev]);
+    router.push(`/chat`);
+  };;
 
   return (
     <nav className="flex-1">

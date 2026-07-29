@@ -22,6 +22,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { chatService } from "@/services/chatService";
 
+interface Model {
+  id: string;
+  display_name?: string;
+}
+
+interface Provider {
+  id?: string;
+  name?: string;
+  models?: Model[];
+}
+
+interface ValidateResponse {
+  allowed?: boolean;
+  reason?: string;
+}
+
 export default function ChatFooterComponent() {
   const { user, logout } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,17 +51,17 @@ export default function ChatFooterComponent() {
     if (isModalOpen) {
       const fetchProviders = async () => {
         try {
-          const response: any = await get(API_ENDPOINTS.AUTH.PROVIDERS);
-          const data = response?.data || response || [];
+          const response = (await get(API_ENDPOINTS.AUTH.PROVIDERS)) as { data?: Provider[] } | Provider[] | null;
+          const data = (Array.isArray(response) ? response : response?.data) || [];
 
           const formattedProviders: {
             id: string;
             name: string;
             providerId?: string;
           }[] = [];
-          data.forEach((provider: any) => {
+          data.forEach((provider: Provider) => {
             if (provider.models && provider.models.length > 0) {
-              provider.models.forEach((model: any) => {
+              provider.models.forEach((model: Model) => {
                 formattedProviders.push({
                   id: model.id,
                   name: model.display_name || model.id,
@@ -54,8 +70,8 @@ export default function ChatFooterComponent() {
               });
             } else {
               formattedProviders.push({
-                id: provider.id || provider.name,
-                name: provider.name || provider.id,
+                id: provider.id || provider.name || "",
+                name: provider.name || provider.id || "",
                 providerId: provider.id,
               });
             }
@@ -79,16 +95,17 @@ export default function ChatFooterComponent() {
     const providerToValidate = selectedObj?.providerId || selectedProvider;
 
     try {
-      const response: any = await get(
+      const response = (await get(
         API_ENDPOINTS.AUTH.VALIDATE(providerToValidate),
         {
           headers: {
             Authorization: `Bearer ${apiKey}`,
           },
         },
-      );
+      )) as ValidateResponse | null;
       if (response?.allowed) {
         localStorage.setItem("AI_ID", apiKey);
+        localStorage.setItem("allowed", "true");
         // Fetch authenticated user information
         const userInfo = await chatService.getUserInfo();
         window.localStorage.setItem("USER_ID", userInfo?.owner_user_id);
@@ -99,6 +116,7 @@ export default function ChatFooterComponent() {
         );
         setIsModalOpen(false);
       } else {
+        localStorage.setItem("allowed", "false");
         window.dispatchEvent(
           new CustomEvent("gatewayValidationStatus", {
             detail: { allowed: false },
@@ -108,6 +126,7 @@ export default function ChatFooterComponent() {
       }
     } catch (error) {
       console.error("Validation failed", error);
+      localStorage.setItem("allowed", "false");
       window.dispatchEvent(
         new CustomEvent("gatewayValidationStatus", {
           detail: { allowed: false },
@@ -185,25 +204,23 @@ export default function ChatFooterComponent() {
 
             <div className="mb-4">
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex h-9 w-[352px] cursor-pointer items-center justify-between gap-1 rounded-[4px] border border-[#E5E7EB] bg-white px-3 text-[13px] font-normal text-black shadow-none outline-none transition-colors hover:border-neutral-300"
-                  >
-                    <span className="truncate">
-                      {providers.find(
+                <DropdownMenuTrigger
+                  type="button"
+                  className="flex h-9 w-[352px] cursor-pointer items-center justify-between gap-1 rounded-[4px] border border-[#E5E7EB] bg-white px-3 text-[13px] font-normal text-black shadow-none outline-none transition-colors hover:border-neutral-300"
+                >
+                  <span className="truncate">
+                    {providers.find(
+                      (p) => (p.id || p.name) === selectedProvider,
+                    )?.name ||
+                      providers.find(
                         (p) => (p.id || p.name) === selectedProvider,
-                      )?.name ||
-                        providers.find(
-                          (p) => (p.id || p.name) === selectedProvider,
-                        )?.id ||
-                        "Select Provider"}
-                    </span>
-                    <ChevronDown
-                      className="h-4 w-4 text-neutral-400"
-                      strokeWidth={2}
-                    />
-                  </button>
+                      )?.id ||
+                      "Select Provider"}
+                  </span>
+                  <ChevronDown
+                    className="h-4 w-4 text-neutral-400"
+                    strokeWidth={2}
+                  />
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent
