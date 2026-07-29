@@ -30,6 +30,7 @@ export default function MainChat({ chatMessages }: props) {
   const router = useRouter();
   const [messageText, setMessageText] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isWelcome = pathname === "/chat" || pathname === "/chat/";
@@ -92,6 +93,7 @@ export default function MainChat({ chatMessages }: props) {
 
     const updatedMessages = [...localMessages, userMsg];
     setLocalMessages(updatedMessages);
+    setIsGenerating(true);
 
     try {
       const payload = {
@@ -134,6 +136,8 @@ export default function MainChat({ chatMessages }: props) {
         provider: null,
       };
       setLocalMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -165,7 +169,7 @@ export default function MainChat({ chatMessages }: props) {
       <div className="flex-1 overflow-y-auto w-full">
         <div className="w-full flex justify-center">
           {localMessages.length > 0 && (
-            <ChatConversation messages={localMessages} />
+            <ChatConversation messages={localMessages} isGenerating={isGenerating} />
           )}
         </div>
         <div ref={messagesEndRef} />
