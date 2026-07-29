@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { chatService } from "@/services/chatService";
+import { authService } from "@/services/authService";
 
 interface Model {
   id: string;
@@ -180,7 +181,7 @@ export default function ChatFooterComponent() {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                onClick={logout}
+                onClick={() => authService.logoutUser()}
                 className="mt-1 flex items-center gap-4 p-3 text-xs font-medium text-[#EF4444] cursor-pointer"
               >
                 <LogOut size={20} strokeWidth={2} />
