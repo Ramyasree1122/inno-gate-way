@@ -8,4 +8,5 @@ export const API_ENDPOINTS = {
   CHECK_USAGE: "/api/analytics/users/{id}/usage",
   GET_CHAT_SESSIONS: "/api/chat/sessions",
   GET_USER_INFO: "/api/gateway-keys/me",
+  GET_CHAT_BY_ID: "/api/chat/sessions/{id}",
 };

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SquarePen } from "lucide-react";
-import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 type Chat = {
   id: string;
@@ -22,10 +21,12 @@ export default function ChatComponent({ chatSessions }: props) {
 
   const pathname = usePathname();
 
-  const [chats, setChats] = useState<Chat[]>([]);
-
   const handleNewChat = () => {
     router.push(`/chat`);
+  };
+
+  const handleClick = (id: string) => {
+    router.push(`/chat/${id}`);
   };
 
   return (
@@ -43,13 +44,17 @@ export default function ChatComponent({ chatSessions }: props) {
       <h3 className="px-2 pb-1 text-sm font-medium">Recents</h3>
       <div className="max-h-87 overflow-y-auto">
         {chatSessions?.map((chat: ChatSession) => {
-          const href = "";
+          const href = `/chat/${chat.id}`;
           const isActive = pathname === href;
 
           return (
             <Link
               key={chat?.id}
               href={href}
+              onClick={(e) => {
+                e.preventDefault();
+                handleClick(chat.id);
+              }}
               className={`block rounded-md px-4 mx-2 my-1 py-2 text-xs transition-colors ${
                 isActive
                   ? "bg-neutral-200 text-black font-medium"
