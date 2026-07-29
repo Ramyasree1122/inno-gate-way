@@ -158,7 +158,7 @@ export default function ChatFooterComponent() {
             </p>
           </div>
           <DropdownMenu>
-            <DropdownMenuTrigger className="rounded-md p-1 hover:bg-neutral-200 focus:outline-none">
+            <DropdownMenuTrigger className="rounded-md p-1 focus:outline-none">
               <ChevronDown size={18} />
             </DropdownMenuTrigger>
 
