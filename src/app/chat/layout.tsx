@@ -71,6 +71,15 @@ export default function DashboardLayout({
     if (!allowed) return;
 
     fetchData();
+
+    const handleRefresh = () => {
+      fetchData();
+    };
+
+    window.addEventListener("refreshChatData", handleRefresh);
+    return () => {
+      window.removeEventListener("refreshChatData", handleRefresh);
+    };
   }, [allowed]);
 
   useEffect(() => {

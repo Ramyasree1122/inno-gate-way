@@ -106,6 +106,7 @@ export default function ChatFooterComponent() {
       if (response?.allowed) {
         window.localStorage.setItem("AI_ID", apiKey);
         window.localStorage.setItem("allowed", "true");
+        window.localStorage.setItem("SELECTED_MODEL", selectedProvider);
         // Fetch authenticated user information
         const userInfo = await chatService.getUserInfo();
         if (userInfo?.owner_user_id) {

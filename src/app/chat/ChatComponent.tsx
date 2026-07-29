@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SquarePen } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { chatService } from "@/services/chatService";
 type Chat = {
   id: string;
   title: string;
@@ -21,8 +22,19 @@ export default function ChatComponent({ chatSessions }: props) {
 
   const pathname = usePathname();
 
-  const handleNewChat = () => {
-    router.push(`/chat`);
+  const handleNewChat = async () => {
+    try {
+      const response = await chatService.createChatSession({});
+      if (response && response.id) {
+        router.push(`/chat/${response.id}`);
+      } else if (pathname !== '/chat') {
+        router.push(`/chat`);
+      } else {
+        window.location.reload(); // Quick reset if no ID returned
+      }
+    } catch (error) {
+      console.error("Failed to create chat session:", error);
+    }
   };
 
   const handleClick = (id: string) => {
