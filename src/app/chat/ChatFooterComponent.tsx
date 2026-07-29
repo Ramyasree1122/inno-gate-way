@@ -70,8 +70,8 @@ export default function ChatFooterComponent() {
               });
             } else {
               formattedProviders.push({
-                id: provider.id || provider.name || "",
-                name: provider.name || provider.id || "",
+                id: provider.id || "",
+                name: provider.name || "",
                 providerId: provider.id,
               });
             }
