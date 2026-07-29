@@ -283,14 +283,12 @@ export default function ChatInput({
               </>
 
               <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <button
-                    type="button"
-                    className="flex h-8 w-[150px] cursor-pointer items-center justify-between gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none outline-none transition-colors hover:bg-neutral-200"
-                  >
-                    <span className="truncate">{selectedModel?.label || "Loading..."}</span>
-                    <ChevronDown className="h-4 w-4" strokeWidth={2} />
-                  </button>
+                <DropdownMenuTrigger
+                  type="button"
+                  className="flex h-8 w-[150px] cursor-pointer items-center justify-between gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none outline-none transition-colors hover:bg-neutral-200"
+                >
+                  <span className="truncate">{selectedModel?.label || "Loading..."}</span>
+                  <ChevronDown className="h-4 w-4" strokeWidth={2} />
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent
