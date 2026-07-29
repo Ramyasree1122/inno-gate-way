@@ -30,4 +30,19 @@ export const authService = {
     // TODO: Replace with your actual backend endpoint
     // return post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, { email, password });
   },
+
+  /**
+   * Logout user
+   * Clears localStorage and redirects user to the login page.
+   */
+  logoutUser: async () => {
+    try {
+      await post(API_ENDPOINTS.AUTH.LOGOUT);
+    } catch (error) {
+      console.error("Failed to logout from backend:", error);
+    } finally {
+      window.localStorage.clear();
+      window.location.href = "/login";
+    }
+  },
 };
