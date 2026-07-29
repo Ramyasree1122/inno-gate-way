@@ -92,9 +92,11 @@ export default function ChatInput({
   }, []);
 
   useEffect(() => {
+    setIsAllowed(typeof window !== "undefined" && window.localStorage.getItem("allowed") === "true");
+    
     const handleStatusChange = (e: any) => {
       setIsAllowed(!!e.detail?.allowed);
-      const storedModelId = window.localStorage.getItem("SELECTED_MODEL");
+      const storedModelId = typeof window !== "undefined" ? window.localStorage.getItem("SELECTED_MODEL") : null;
       if (storedModelId) {
         setModels(currentModels => {
           const found = currentModels.find(m => m.value === storedModelId);
@@ -305,7 +307,8 @@ export default function ChatInput({
               <DropdownMenu>
                 <DropdownMenuTrigger
                   type="button"
-                  className="flex h-8 w-[150px] cursor-pointer items-center justify-between gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none outline-none transition-colors hover:bg-neutral-200"
+                  disabled={!isAllowed}
+                  className="flex h-8 w-[150px] items-center justify-between gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none outline-none transition-colors hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span className="truncate">{selectedModel?.label || "Loading..."}</span>
                   <ChevronDown className="h-4 w-4" strokeWidth={2} />

@@ -183,7 +183,7 @@ export default function ChatFooterComponent() {
 
               <DropdownMenuItem
                 onClick={() => authService.logoutUser()}
-                className="mt-1 flex items-center gap-4 p-3 text-xs font-medium text-[#EF4444] cursor-pointer"
+                className="mt-1 flex items-center gap-4 p-3 text-xs font-medium text-[#EF4444] hover:text-[#EF4444] focus:text-[#EF4444] cursor-pointer"
               >
                 <LogOut size={20} strokeWidth={2} />
                 Logout
