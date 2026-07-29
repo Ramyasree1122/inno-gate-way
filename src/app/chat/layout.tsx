@@ -33,7 +33,7 @@ export default function DashboardLayout({
   };
 
   useEffect(() => {
-    setAllowed(localStorage.getItem("allowed") === "true");
+    setAllowed(window.localStorage.getItem("allowed") === "true");
 
     const handleValidationStatus = (event: Event) => {
       const customEvent = event as CustomEvent;

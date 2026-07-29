@@ -120,7 +120,7 @@ export default function ChatFooterComponent() {
         );
         setIsModalOpen(false);
       } else {
-        localStorage.setItem("allowed", "false");
+        window.localStorage.setItem("allowed", "false");
         window.dispatchEvent(
           new CustomEvent("gatewayValidationStatus", {
             detail: { allowed: false },
@@ -130,7 +130,7 @@ export default function ChatFooterComponent() {
       }
     } catch (error) {
       console.error("Validation failed", error);
-      localStorage.setItem("allowed", "false");
+      window.localStorage.setItem("allowed", "false");
       window.dispatchEvent(
         new CustomEvent("gatewayValidationStatus", {
           detail: { allowed: false },
