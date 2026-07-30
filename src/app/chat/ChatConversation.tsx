@@ -56,7 +56,7 @@ interface ChatConversationProps {
 interface CodeBlockProps {
   language: string;
   codeText: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const CodeBlock = ({ language, codeText, ...props }: CodeBlockProps) => {

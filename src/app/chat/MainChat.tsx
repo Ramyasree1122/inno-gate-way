@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { chatService } from "@/services/chatService";
 
-interface Message {
+export interface Message {
   id: string;
   role: string;
   content: string;
@@ -15,7 +15,7 @@ interface Message {
   provider?: string | null;
 }
 
-interface ChatMessages {
+export interface ChatMessages {
   id: string;
   title: string;
   messages: Message[];
@@ -34,7 +34,26 @@ export default function MainChat({ chatMessages }: props) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isWelcome = pathname === "/chat" || pathname === "/chat/";
-  const chatId = pathname.startsWith("/chat/") && pathname.length > 6 ? pathname.substring(6) : null;
+  const chatId =
+    pathname.startsWith("/chat/") && pathname.length > 6
+      ? pathname.substring(6)
+      : null;
+
+  const [isAllowed, setIsAllowed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.localStorage.getItem("allowed") === "true";
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleStatusChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ allowed?: boolean }>;
+      setIsAllowed(!!customEvent.detail?.allowed);
+    };
+    window.addEventListener("gatewayValidationStatus", handleStatusChange);
+    return () => window.removeEventListener("gatewayValidationStatus", handleStatusChange);
+  }, []);
 
   // Clear input message when switching chats
   useEffect(() => {
@@ -45,29 +64,44 @@ export default function MainChat({ chatMessages }: props) {
   useEffect(() => {
     if (chatId) {
       if (chatMessages && chatMessages.id === chatId) {
-        setLocalMessages(chatMessages.messages || []);
-      } else {
-        chatService.getChatById(chatId).then((response) => {
-          if (response) {
-            setLocalMessages(response.messages || []);
-          }
+        Promise.resolve().then(() => {
+          setLocalMessages(chatMessages.messages || []);
         });
+      } else {
+        if (isAllowed) {
+          chatService.getChatById(chatId).then((response) => {
+            if (response) {
+              setLocalMessages(response.messages || []);
+            }
+          });
+        }
       }
     } else {
-      setLocalMessages([]);
+      Promise.resolve().then(() => {
+        setLocalMessages([]);
+      });
     }
-  }, [chatId, chatMessages]);
+  }, [chatId, chatMessages, isAllowed]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [localMessages, chatId]);
 
-  const handleSendMessage = async (text: string, selectedModel?: any) => {
+  interface SelectedModelType {
+    value: string;
+    label: string;
+    provider?: string;
+  }
+
+  const handleSendMessage = async (
+    text: string,
+    selectedModel?: SelectedModelType | null,
+  ) => {
     if (!text.trim()) return;
 
     let activeChatId = chatId;
-    
+
     if (!activeChatId) {
       try {
         const response = await chatService.createChatSession({});
@@ -169,7 +203,10 @@ export default function MainChat({ chatMessages }: props) {
       <div className="flex-1 overflow-y-auto w-full">
         <div className="w-full flex justify-center">
           {localMessages.length > 0 && (
-            <ChatConversation messages={localMessages} isGenerating={isGenerating} />
+            <ChatConversation
+              messages={localMessages}
+              isGenerating={isGenerating}
+            />
           )}
         </div>
         <div ref={messagesEndRef} />

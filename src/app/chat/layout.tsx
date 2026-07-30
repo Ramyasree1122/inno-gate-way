@@ -1,17 +1,22 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/components/providers/AuthProvider';
-import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { LogOut, MessageSquare, Users } from "lucide-react";
 import Link from "next/link";
 import SvgIcon from "@/components/svgIcons";
 import CheckUsageBalanceComponent from "./CheckUsageBalanceComponent";
-import ChatComponent from "./ChatComponent";
+import ChatComponent, { ChatSession } from "./ChatComponent";
 import ChatFooterComponent from "./ChatFooterComponent";
-import MainChat from "./MainChat";
+import MainChat, { ChatMessages } from "./MainChat";
 import { chatService } from "@/services/chatService";
-
+export interface UsageResponse {
+  total_tokens?: number;
+  optimizer_final_tokens?: number;
+  optimizer_saved_tokens?: number;
+  savings_percent?: number;
+}
 export default function DashboardLayout({
   children,
 }: {
@@ -21,14 +26,16 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const hasAutoRedirected = useRef(false);
-  const [usageResponse, setUsageResponse] = useState<any[]>([]);
-  const [chatSessions, setChatSessions] = useState<any[]>([]);
+  const [usageResponse, setUsageResponse] = useState<UsageResponse | null>(
+    null,
+  );
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [allowed, setAllowed] = useState<boolean>(false);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessages | null>(null);
 
   useEffect(() => {
     if (chatSessions && chatSessions.length > 0) {
-      if (pathname === "/chat" && !hasAutoRedirected.current) {
+      if (pathname.startsWith("/chat") && !hasAutoRedirected.current) {
         hasAutoRedirected.current = true;
         router.push(`/chat/${chatSessions[0].id}`);
       } else {
@@ -46,7 +53,11 @@ export default function DashboardLayout({
   };
 
   useEffect(() => {
-    setAllowed(window.localStorage.getItem("allowed") === "true");
+    // Reset validation state on page load / manual refresh
+    window.localStorage.setItem("allowed", "false");
+    window.localStorage.removeItem("AI_ID");
+    window.localStorage.removeItem("USER_ID");
+    setAllowed(false);
 
     const handleValidationStatus = (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -55,6 +66,10 @@ export default function DashboardLayout({
         typeof customEvent.detail.allowed === "boolean"
       ) {
         setAllowed(customEvent.detail.allowed);
+        if (customEvent.detail.allowed) {
+          hasAutoRedirected.current = false;
+          fetchData();
+        }
       }
     };
 
@@ -69,8 +84,6 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!allowed) return;
-
-    fetchData();
 
     const handleRefresh = () => {
       fetchData();
@@ -107,7 +120,7 @@ export default function DashboardLayout({
         <CheckUsageBalanceComponent usageResponse={usageResponse} />
         <ChatComponent
           chatSessions={chatSessions}
-          setChatMessages={setChatMessages}
+          // setChatMessages={setChatMessages}
         />
         <ChatFooterComponent />
       </aside>
@@ -115,4 +128,3 @@ export default function DashboardLayout({
     </div>
   );
 }
-

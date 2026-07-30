@@ -2,11 +2,17 @@ import { API_ENDPOINTS } from "@/shared/constants/apiEndpoints";
 import { axiosInstance } from "@/lib/axios";
 
 // Helper functions defined at the top
-const getAiId = () => typeof window !== "undefined" ? window.localStorage.getItem("AI_ID") : null;
-const getUserId = () => typeof window !== "undefined" ? window.localStorage.getItem("USER_ID") : null;
+const getAiId = () =>
+  typeof window !== "undefined" ? window.localStorage.getItem("AI_ID") : null;
+const getUserId = () =>
+  typeof window !== "undefined" ? window.localStorage.getItem("USER_ID") : null;
+const isAllowed = () =>
+  typeof window !== "undefined" &&
+  window.localStorage.getItem("allowed") === "true";
 
 export const chatService = {
   getUserInfo: async () => {
+    if (!isAllowed()) return;
     try {
       const response = await axiosInstance.get(API_ENDPOINTS.GET_USER_INFO, {
         headers: {
@@ -18,8 +24,9 @@ export const chatService = {
       console.error("Error fetching usage:", error);
     }
   },
-  
+
   getCheckUsage: async () => {
+    if (!isAllowed()) return;
     try {
       const response = await axiosInstance.get(
         API_ENDPOINTS.CHECK_USAGE.replace("{id}", getUserId() || ""),
@@ -31,6 +38,7 @@ export const chatService = {
   },
 
   getChatSessions: async () => {
+    if (!isAllowed()) return;
     try {
       const response = await axiosInstance.get(
         `${API_ENDPOINTS.GET_CHAT_SESSIONS}?include_archived=false`,
@@ -45,13 +53,17 @@ export const chatService = {
       console.error("Error fetching usage:", error);
     }
   },
-  getChatById: async (id:string) => {
+  getChatById: async (id: string) => {
+    if (!isAllowed()) return;
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.GET_CHAT_BY_ID.replace("{id}", id), {
-        headers: {
-          Authorization: `Bearer ${getAiId()}`,
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.GET_CHAT_BY_ID.replace("{id}", id),
+        {
+          headers: {
+            Authorization: `Bearer ${getAiId()}`,
+          },
         },
-      });
+      );
       return response.data;
     } catch (error) {
       console.error("Error fetching usage:", error);

@@ -37,6 +37,21 @@ type ChatInputProps = {
   isWelcome?: boolean;
 };
 
+interface Model {
+  id: string;
+  display_name?: string;
+}
+
+interface Provider {
+  id?: string;
+  name?: string;
+  models?: Model[];
+}
+
+interface ProviderResponse {
+  data?: Provider[];
+}
+
 export default function ChatInput({
   setMessage = () => {},
   message,
@@ -47,17 +62,22 @@ export default function ChatInput({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [models, setModels] = useState<{ value: string; label: string; provider?: string }[]>([]);
   const [selectedModel, setSelectedModel] = useState<{ value: string; label: string; provider?: string } | null>(null);
-  const [isAllowed, setIsAllowed] = useState(false);
+  const [isAllowed, setIsAllowed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.localStorage.getItem("allowed") === "true";
+    }
+    return false;
+  });
 
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const response: any = await get(API_ENDPOINTS.AUTH.PROVIDERS);
-        const data = response?.data || response || [];
+        const response = (await get(API_ENDPOINTS.AUTH.PROVIDERS)) as Provider[] | ProviderResponse | null;
+        const data = (Array.isArray(response) ? response : response?.data) || [];
         const formattedModels: { value: string; label: string; provider?: string }[] = [];
-        data.forEach((provider: any) => {
+        data.forEach((provider: Provider) => {
           if (provider.models && provider.models.length > 0) {
-            provider.models.forEach((model: any) => {
+            provider.models.forEach((model: Model) => {
               formattedModels.push({
                 value: model.id,
                 label: model.display_name || model.id,
@@ -66,8 +86,8 @@ export default function ChatInput({
             });
           } else {
             formattedModels.push({
-              value: provider.id || provider.name,
-              label: provider.name || provider.id,
+              value: provider.id || provider.name || "",
+              label: provider.name || provider.id || "",
               provider: provider.id || provider.name,
             });
           }
@@ -92,10 +112,9 @@ export default function ChatInput({
   }, []);
 
   useEffect(() => {
-    setIsAllowed(typeof window !== "undefined" && window.localStorage.getItem("allowed") === "true");
-    
-    const handleStatusChange = (e: any) => {
-      setIsAllowed(!!e.detail?.allowed);
+    const handleStatusChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ allowed?: boolean }>;
+      setIsAllowed(!!customEvent.detail?.allowed);
       const storedModelId = typeof window !== "undefined" ? window.localStorage.getItem("SELECTED_MODEL") : null;
       if (storedModelId) {
         setModels(currentModels => {
