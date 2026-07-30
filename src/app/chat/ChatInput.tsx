@@ -33,7 +33,7 @@ interface Attachment {
 type ChatInputProps = {
   setMessage: React.Dispatch<React.SetStateAction<string>>;
   message: string;
-  handleSendMessage?: (message: string) => void;
+  handleSendMessage?: (message: string, modelInfo?: { value: string; label: string; provider?: string } | null) => void;
   isWelcome?: boolean;
 };
 
@@ -45,8 +45,8 @@ export default function ChatInput({
 }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [models, setModels] = useState<{ value: string; label: string }[]>([]);
-  const [selectedModel, setSelectedModel] = useState<{ value: string; label: string } | null>(null);
+  const [models, setModels] = useState<{ value: string; label: string; provider?: string }[]>([]);
+  const [selectedModel, setSelectedModel] = useState<{ value: string; label: string; provider?: string } | null>(null);
   const [isAllowed, setIsAllowed] = useState(false);
 
   useEffect(() => {
@@ -54,24 +54,34 @@ export default function ChatInput({
       try {
         const response: any = await get(API_ENDPOINTS.AUTH.PROVIDERS);
         const data = response?.data || response || [];
-        const formattedModels: { value: string; label: string }[] = [];
+        const formattedModels: { value: string; label: string; provider?: string }[] = [];
         data.forEach((provider: any) => {
           if (provider.models && provider.models.length > 0) {
             provider.models.forEach((model: any) => {
               formattedModels.push({
                 value: model.id,
                 label: model.display_name || model.id,
+                provider: provider.id || provider.name,
               });
             });
           } else {
             formattedModels.push({
               value: provider.id || provider.name,
               label: provider.name || provider.id,
+              provider: provider.id || provider.name,
             });
           }
         });
         setModels(formattedModels);
-        if (formattedModels.length > 0) {
+        const storedModelId = window.localStorage.getItem("SELECTED_MODEL");
+        if (storedModelId) {
+          const found = formattedModels.find(m => m.value === storedModelId);
+          if (found) {
+            setSelectedModel(found);
+          } else if (formattedModels.length > 0) {
+            setSelectedModel(formattedModels[0]);
+          }
+        } else if (formattedModels.length > 0) {
           setSelectedModel(formattedModels[0]);
         }
       } catch (error) {
@@ -82,8 +92,20 @@ export default function ChatInput({
   }, []);
 
   useEffect(() => {
+    setIsAllowed(typeof window !== "undefined" && window.localStorage.getItem("allowed") === "true");
+    
     const handleStatusChange = (e: any) => {
       setIsAllowed(!!e.detail?.allowed);
+      const storedModelId = typeof window !== "undefined" ? window.localStorage.getItem("SELECTED_MODEL") : null;
+      if (storedModelId) {
+        setModels(currentModels => {
+          const found = currentModels.find(m => m.value === storedModelId);
+          if (found) {
+            setSelectedModel(found);
+          }
+          return currentModels;
+        });
+      }
     };
     window.addEventListener("gatewayValidationStatus", handleStatusChange);
     return () => window.removeEventListener("gatewayValidationStatus", handleStatusChange);
@@ -161,7 +183,7 @@ export default function ChatInput({
 
   const handleSend = () => {
     if (isSendDisabled) return;
-    handleSendMessage?.(message);
+    handleSendMessage?.(message, selectedModel);
     setMessage("");
     attachments.forEach((att) => {
       if (att.previewUrl) URL.revokeObjectURL(att.previewUrl);
@@ -285,7 +307,8 @@ export default function ChatInput({
               <DropdownMenu>
                 <DropdownMenuTrigger
                   type="button"
-                  className="flex h-8 w-[150px] cursor-pointer items-center justify-between gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none outline-none transition-colors hover:bg-neutral-200"
+                  disabled={!isAllowed}
+                  className="flex h-8 w-[150px] items-center justify-between gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none outline-none transition-colors hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span className="truncate">{selectedModel?.label || "Loading..."}</span>
                   <ChevronDown className="h-4 w-4" strokeWidth={2} />

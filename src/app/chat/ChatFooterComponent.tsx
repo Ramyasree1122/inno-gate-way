@@ -107,6 +107,7 @@ export default function ChatFooterComponent() {
       if (response?.allowed) {
         window.localStorage.setItem("AI_ID", apiKey);
         window.localStorage.setItem("allowed", "true");
+        window.localStorage.setItem("SELECTED_MODEL", selectedProvider);
         // Fetch authenticated user information
         const userInfo = await chatService.getUserInfo();
         if (userInfo?.owner_user_id) {
@@ -182,9 +183,9 @@ export default function ChatFooterComponent() {
 
               <DropdownMenuItem
                 onClick={() => authService.logoutUser()}
-                className="mt-1 flex items-center gap-4 p-3 text-xs font-medium text-[#EF4444] cursor-pointer"
+                className="mt-1 flex items-center gap-4 p-3 text-xs font-medium !text-[#EF4444] cursor-pointer"
               >
-                <LogOut size={20} strokeWidth={2} />
+                <LogOut size={20} strokeWidth={2} className="!text-[#EF4444]" />
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SquarePen } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { chatService } from "@/services/chatService";
 type Chat = {
   id: string;
   title: string;

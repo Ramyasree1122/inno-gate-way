@@ -57,4 +57,40 @@ export const chatService = {
       console.error("Error fetching usage:", error);
     }
   },
+  createChatSession: async (payload: any) => {
+    try {
+      const aiId = typeof window !== "undefined" ? window.localStorage.getItem("AI_ID") : null;
+      const response = await axiosInstance.post(
+        API_ENDPOINTS.CREATE_CHAT_SESSION,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${aiId}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating chat session:", error);
+      throw error;
+    }
+  },
+  sendChatCompletion: async (payload: any) => {
+    try {
+      const aiId = typeof window !== "undefined" ? window.localStorage.getItem("AI_ID") : null;
+      const response = await axiosInstance.post(
+        API_ENDPOINTS.CHAT_COMPLETIONS,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${aiId}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error sending chat completion:", error);
+      throw error;
+    }
+  },
 };

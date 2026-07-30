@@ -35,12 +35,14 @@ export function UserLoginForm() {
   const { loginUser, isLoading } = useAuth();
 
   const emailForm = useRHForm<EmailFormValues>({
+    // @ts-expect-error zod version mismatch
     resolver: zodResolver(emailSchema),
     defaultValues: { email: "" },
     mode: "onChange",
   });
 
   const otpForm = useRHForm<OtpFormValues>({
+    // @ts-expect-error zod version mismatch
     resolver: zodResolver(otpSchema),
     defaultValues: { otp: "" },
     mode: "onChange",
