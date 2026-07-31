@@ -122,6 +122,13 @@ export default function ChatInput({
   }, []);
 
   useEffect(() => {
+    const isAllowedInitially = typeof window !== "undefined" && window.localStorage.getItem("allowed") === "true";
+    if (isAllowedInitially) {
+      Promise.resolve().then(() => {
+        setIsAllowed(true);
+      });
+    }
+
     const handleStatusChange = (e: Event) => {
       const customEvent = e as CustomEvent<{ allowed?: boolean }>;
       setIsAllowed(!!customEvent.detail?.allowed);

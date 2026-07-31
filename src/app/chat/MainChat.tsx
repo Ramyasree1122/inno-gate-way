@@ -45,25 +45,37 @@ export default function MainChat({ chatMessages }: props) {
       ? pathname.substring(6)
       : null;
 
-  // Clear input message when switching chats
-  useEffect(() => {
-    setMessageText("");
-  }, [chatId]);
+  const [prevChatId, setPrevChatId] = useState<string | null>(null);
+  const [prevChatMessages, setPrevChatMessages] = useState<ChatMessages | null>(null);
 
-  // Load chat messages based on chatId
-  useEffect(() => {
+  // Sync state when chatId or chatMessages prop changes during render phase
+  if (chatId !== prevChatId || chatMessages !== prevChatMessages) {
+    setPrevChatId(chatId);
+    setPrevChatMessages(chatMessages);
+
+    if (chatId !== prevChatId) {
+      setMessageText("");
+    }
+
     if (chatId) {
       if (chatMessages && chatMessages.id === chatId) {
         setLocalMessages(chatMessages.messages || []);
-      } else {
-        chatService.getChatById(chatId).then((response) => {
-          if (response) {
-            setLocalMessages(response.messages || []);
-          }
-        });
+      } else if (chatId !== prevChatId) {
+        setLocalMessages([]);
       }
     } else {
       setLocalMessages([]);
+    }
+  }
+
+  // Load chat messages asynchronously if needed
+  useEffect(() => {
+    if (chatId && (!chatMessages || chatMessages.id !== chatId)) {
+      chatService.getChatById(chatId).then((response) => {
+        if (response) {
+          setLocalMessages(response.messages || []);
+        }
+      });
     }
   }, [chatId, chatMessages]);
 

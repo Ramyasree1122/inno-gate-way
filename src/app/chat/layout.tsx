@@ -57,8 +57,10 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const isAllowedInitially = window.localStorage.getItem("allowed") === "true";
-    setAllowed(isAllowedInitially);
     if (isAllowedInitially) {
+      Promise.resolve().then(() => {
+        setAllowed(true);
+      });
       fetchData();
     }
 
