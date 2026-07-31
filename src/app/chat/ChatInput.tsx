@@ -29,11 +29,27 @@ interface Attachment {
   previewUrl?: string;
   file: File;
 }
+interface Model {
+  id: string;
+  display_name?: string;
+}
 
+interface Provider {
+  id?: string;
+  name?: string;
+  models?: Model[];
+}
+
+interface ProviderResponse {
+  data?: Provider[];
+}
 type ChatInputProps = {
   setMessage: React.Dispatch<React.SetStateAction<string>>;
   message: string;
-  handleSendMessage?: (message: string, modelInfo?: { value: string; label: string; provider?: string } | null) => void;
+  handleSendMessage?: (
+    message: string,
+    modelInfo?: { value: string; label: string; provider?: string } | null,
+  ) => void;
   isWelcome?: boolean;
 };
 
@@ -45,19 +61,33 @@ export default function ChatInput({
 }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [models, setModels] = useState<{ value: string; label: string; provider?: string }[]>([]);
-  const [selectedModel, setSelectedModel] = useState<{ value: string; label: string; provider?: string } | null>(null);
-  const [isAllowed, setIsAllowed] = useState(false);
+  const [models, setModels] = useState<
+    { value: string; label: string; provider?: string }[]
+  >([]);
+  const [selectedModel, setSelectedModel] = useState<{
+    value: string;
+    label: string;
+    provider?: string;
+  } | null>(null);
 
+  const [isAllowed, setIsAllowed] = useState(false);
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const response: any = await get(API_ENDPOINTS.AUTH.PROVIDERS);
-        const data = response?.data || response || [];
-        const formattedModels: { value: string; label: string; provider?: string }[] = [];
-        data.forEach((provider: any) => {
+        const response = (await get(API_ENDPOINTS.AUTH.PROVIDERS)) as
+          | Provider[]
+          | ProviderResponse
+          | null;
+        const data =
+          (Array.isArray(response) ? response : response?.data) || [];
+        const formattedModels: {
+          value: string;
+          label: string;
+          provider?: string;
+        }[] = [];
+        data.forEach((provider: Provider) => {
           if (provider.models && provider.models.length > 0) {
-            provider.models.forEach((model: any) => {
+            provider.models.forEach((model: Model) => {
               formattedModels.push({
                 value: model.id,
                 label: model.display_name || model.id,
@@ -66,8 +96,8 @@ export default function ChatInput({
             });
           } else {
             formattedModels.push({
-              value: provider.id || provider.name,
-              label: provider.name || provider.id,
+              value: provider.id || provider.name || "",
+              label: provider.name || provider.id || "",
               provider: provider.id || provider.name,
             });
           }
@@ -75,7 +105,7 @@ export default function ChatInput({
         setModels(formattedModels);
         const storedModelId = window.localStorage.getItem("SELECTED_MODEL");
         if (storedModelId) {
-          const found = formattedModels.find(m => m.value === storedModelId);
+          const found = formattedModels.find((m) => m.value === storedModelId);
           if (found) {
             setSelectedModel(found);
           } else if (formattedModels.length > 0) {
@@ -92,14 +122,16 @@ export default function ChatInput({
   }, []);
 
   useEffect(() => {
-    setIsAllowed(typeof window !== "undefined" && window.localStorage.getItem("allowed") === "true");
-    
-    const handleStatusChange = (e: any) => {
-      setIsAllowed(!!e.detail?.allowed);
-      const storedModelId = typeof window !== "undefined" ? window.localStorage.getItem("SELECTED_MODEL") : null;
+    const handleStatusChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ allowed?: boolean }>;
+      setIsAllowed(!!customEvent.detail?.allowed);
+      const storedModelId =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("SELECTED_MODEL")
+          : null;
       if (storedModelId) {
-        setModels(currentModels => {
-          const found = currentModels.find(m => m.value === storedModelId);
+        setModels((currentModels) => {
+          const found = currentModels.find((m) => m.value === storedModelId);
           if (found) {
             setSelectedModel(found);
           }
@@ -108,7 +140,8 @@ export default function ChatInput({
       }
     };
     window.addEventListener("gatewayValidationStatus", handleStatusChange);
-    return () => window.removeEventListener("gatewayValidationStatus", handleStatusChange);
+    return () =>
+      window.removeEventListener("gatewayValidationStatus", handleStatusChange);
   }, []);
 
   useEffect(() => {
@@ -179,7 +212,9 @@ export default function ChatInput({
     });
   };
 
-  const isSendDisabled = !isAllowed || ((message ?? "").trim().length === 0 && attachments.length === 0);
+  const isSendDisabled =
+    !isAllowed ||
+    ((message ?? "").trim().length === 0 && attachments.length === 0);
 
   const handleSend = () => {
     if (isSendDisabled) return;
@@ -273,7 +308,9 @@ export default function ChatInput({
         <div className="flex items-start">
           <div className="flex-1 flex flex-col">
             <Textarea
-              placeholder={isAllowed ? "Ask anything..." : "API key required..."}
+              placeholder={
+                isAllowed ? "Ask anything..." : "API key required..."
+              }
               value={message}
               disabled={!isAllowed}
               onChange={(e) => setMessage(e.target.value)}
@@ -310,7 +347,9 @@ export default function ChatInput({
                   disabled={!isAllowed}
                   className="flex h-8 w-[150px] items-center justify-between gap-1 rounded-md border-0 bg-neutral-100 px-3 text-xs font-normal text-black shadow-none outline-none transition-colors hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  <span className="truncate">{selectedModel?.label || "Loading..."}</span>
+                  <span className="truncate">
+                    {selectedModel?.label || "Loading..."}
+                  </span>
                   <ChevronDown className="h-4 w-4" strokeWidth={2} />
                 </DropdownMenuTrigger>
 
@@ -337,7 +376,10 @@ export default function ChatInput({
                       </DropdownMenuItem>
                     ))
                   ) : (
-                    <DropdownMenuItem disabled className="px-2 py-2 text-sm text-neutral-400">
+                    <DropdownMenuItem
+                      disabled
+                      className="px-2 py-2 text-sm text-neutral-400"
+                    >
                       Loading...
                     </DropdownMenuItem>
                   )}
