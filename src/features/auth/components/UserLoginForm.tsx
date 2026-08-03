@@ -26,23 +26,62 @@ const otpSchema = z.object({
 type EmailFormValues = z.infer<typeof emailSchema>;
 type OtpFormValues = z.infer<typeof otpSchema>;
 
+const formatTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+    .toString()
+    .padStart(2, "0")}`;
+};
+
 export function UserLoginForm() {
   const [step, setStep] = useState<"email" | "otp" | "success">("email");
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [requestedEmail, setRequestedEmail] = useState("");
   const [error, setError] = useState("");
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const { loginUser, isLoading } = useAuth();
+  const [timer, setTimer] = useState(0); // Starts at 0 (resend active, countdown idle)
+
+  useEffect(() => {
+    if (timer <= 0) return;
+
+    const interval = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer > 0]);
+
+  const handleResend = async () => {
+    if (timer > 0) return;
+    setError("");
+    try {
+      await authService.requestOTP(email);
+      setTimer(60);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to resend OTP");
+      }
+    }
+  };
 
   const emailForm = useRHForm<EmailFormValues>({
-    // @ts-expect-error zod version mismatch
     resolver: zodResolver(emailSchema),
     defaultValues: { email: "" },
     mode: "onChange",
   });
 
   const otpForm = useRHForm<OtpFormValues>({
-    // @ts-expect-error zod version mismatch
     resolver: zodResolver(otpSchema),
     defaultValues: { otp: "" },
     mode: "onChange",
@@ -50,10 +89,19 @@ export function UserLoginForm() {
 
   const onEmailSubmit = async (data: EmailFormValues) => {
     setError("");
+    const targetEmail = data.email.trim().toLowerCase();
+    if (targetEmail === requestedEmail.trim().toLowerCase()) {
+      setStep("otp");
+      return;
+    }
+
     setIsRequestingOtp(true);
     try {
       await authService.requestOTP(data.email);
       setEmail(data.email);
+      setRequestedEmail(data.email);
+      setTimer(0); // Initialize timer at 0 so it starts only after clicking Resend
+      otpForm.reset({ otp: "" });
       setStep("otp");
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -175,12 +223,11 @@ export function UserLoginForm() {
           <h2 className="text-xl font-semibold text-zinc-900 mb-2">
             Check your email
           </h2>
-          <p className="text-base text-center text-zinc-600 mb-6">
-            We've sent a 6-digit verification code to
+          <p className="text-sm text-center text-zinc-600 mb-6 leading-relaxed">
+            We&apos;ve sent a 6-digit verification code to{" "}
+            <span className="font-semibold text-zinc-900">{email}</span>.
             <br />
-            <span className="font-semibold text-zinc-900 block mt-1">
-              {emailValue}
-            </span>
+            Enter the verification code to continue.
           </p>
 
           <form
@@ -238,11 +285,23 @@ export function UserLoginForm() {
               )}
             </div>
 
-            <div className="text-sm text-zinc-700 w-full text-center mt-2">
-              Didn't receive the code?{" "}
+            <div className="text-sm text-zinc-700 w-full flex justify-between mt-2">
+              {timer > 0 ? (
+                <span className="text-[#EF4444] font-medium">
+                  {formatTime(timer)}
+                </span>
+              ) : (
+                <span>Didn&apos;t receive the code? </span>
+              )}
               <button
                 type="button"
-                className="bg-gradient-to-r from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] bg-clip-text text-transparent hover:opacity-80 font-medium ml-1"
+                disabled={timer > 0}
+                onClick={handleResend}
+                className={
+                  timer > 0
+                    ? "text-[#BDBDBD] cursor-not-allowed font-medium ml-1"
+                    : "bg-gradient-to-r from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] bg-clip-text text-transparent hover:opacity-80 font-medium ml-1 cursor-pointer"
+                }
               >
                 Resend
               </button>
@@ -251,7 +310,7 @@ export function UserLoginForm() {
             <button
               type="submit"
               disabled={isLoading || !otpForm.formState.isValid}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none h-10 px-4 py-2 w-full mt-6 ${
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none h-10 px-4 py-2 w-full mt-2 ${
                 hasOtpValue
                   ? "bg-gradient-to-r from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] text-white hover:opacity-90"
                   : "bg-zinc-400 text-white"
@@ -267,6 +326,11 @@ export function UserLoginForm() {
               )}
             </button>
           </form>
+          <div className="bg-[#E9EDFB] rounded text-sm text-black p-3 mt-5">
+            We&apos;ve sent a 6-digit verification code to{" "}
+            <span className="font-extrabold">{emailValue}.</span> Enter the
+            Verification code to continue.
+          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center text-center space-y-6 py-8">
@@ -280,7 +344,7 @@ export function UserLoginForm() {
             Your email has been successfully verified.
           </p>
           <p className="text-sm text-zinc-500 font-normal">
-            You'll be redirected in a moment...
+            You&apos;ll be redirected in a moment...
           </p>
           <div className="mt-8">
             <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
