@@ -3,8 +3,7 @@
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useRef } from "react";
-import { LogOut, MessageSquare, Users } from "lucide-react";
-import Link from "next/link";
+
 import SvgIcon from "@/components/svgIcons";
 import CheckUsageBalanceComponent from "./CheckUsageBalanceComponent";
 import ChatComponent from "./ChatComponent";
@@ -12,6 +11,18 @@ import ChatFooterComponent from "./ChatFooterComponent";
 import MainChat from "./MainChat";
 import { chatService } from "@/services/chatService";
 
+export interface Message {
+  id: string;
+  role: string;
+  content: string;
+  model?: string | null;
+  provider?: string | null;
+}
+export interface ChatMessages {
+  id: string;
+  title: string;
+  messages: Message[];
+}
 export default function DashboardLayout({
   children,
 }: {
@@ -24,7 +35,7 @@ export default function DashboardLayout({
   const [usageResponse, setUsageResponse] = useState<any[]>([]);
   const [chatSessions, setChatSessions] = useState<any[]>([]);
   const [allowed, setAllowed] = useState<boolean>(false);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessages | null>(null);
 
   useEffect(() => {
     if (chatSessions && chatSessions.length > 0) {
@@ -105,10 +116,7 @@ export default function DashboardLayout({
           <span className="text-lg font-semibold pl-1">InnoAIGateway</span>
         </div>
         <CheckUsageBalanceComponent usageResponse={usageResponse} />
-        <ChatComponent
-          chatSessions={chatSessions}
-          setChatMessages={setChatMessages}
-        />
+        <ChatComponent chatSessions={chatSessions} />
         <ChatFooterComponent />
       </aside>
       <MainChat chatMessages={chatMessages} />
