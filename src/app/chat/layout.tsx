@@ -3,8 +3,6 @@
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useRef, useCallback } from "react";
-import { LogOut, MessageSquare, Users } from "lucide-react";
-import Link from "next/link";
 import SvgIcon from "@/components/svgIcons";
 import CheckUsageBalanceComponent from "./CheckUsageBalanceComponent";
 import ChatComponent, { ChatSession } from "./ChatComponent";
