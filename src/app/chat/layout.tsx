@@ -2,27 +2,23 @@
 
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState, useRef } from "react";
-
+import { useEffect, useState, useRef, useCallback } from "react";
+import { LogOut, MessageSquare, Users } from "lucide-react";
+import Link from "next/link";
 import SvgIcon from "@/components/svgIcons";
 import CheckUsageBalanceComponent from "./CheckUsageBalanceComponent";
-import ChatComponent from "./ChatComponent";
+import ChatComponent, { ChatSession } from "./ChatComponent";
 import ChatFooterComponent from "./ChatFooterComponent";
-import MainChat from "./MainChat";
+import MainChat, { ChatMessages } from "./MainChat";
 import { chatService } from "@/services/chatService";
 
-export interface Message {
-  id: string;
-  role: string;
-  content: string;
-  model?: string | null;
-  provider?: string | null;
+export interface UsageResponse {
+  total_tokens?: number;
+  optimizer_final_tokens?: number;
+  optimizer_saved_tokens?: number;
+  savings_percent?: number;
 }
-export interface ChatMessages {
-  id: string;
-  title: string;
-  messages: Message[];
-}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -32,14 +28,16 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const hasAutoRedirected = useRef(false);
-  const [usageResponse, setUsageResponse] = useState<any[]>([]);
-  const [chatSessions, setChatSessions] = useState<any[]>([]);
+  const [usageResponse, setUsageResponse] = useState<UsageResponse | null>(
+    null,
+  );
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [allowed, setAllowed] = useState<boolean>(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessages | null>(null);
 
+  const [chatMessages, setChatMessages] = useState<ChatMessages | null>(null);
   useEffect(() => {
     if (chatSessions && chatSessions.length > 0) {
-      if (pathname === "/chat" && !hasAutoRedirected.current) {
+      if (pathname.startsWith("/chat") && !hasAutoRedirected.current) {
         hasAutoRedirected.current = true;
         router.push(`/chat/${chatSessions[0].id}`);
       } else {
@@ -47,17 +45,24 @@ export default function DashboardLayout({
       }
     }
   }, [chatSessions, pathname, router]);
-  const fetchData = () => {
+
+  const fetchData = useCallback(() => {
     chatService.getCheckUsage().then((response) => {
       setUsageResponse(response);
     });
     chatService.getChatSessions().then((response) => {
       setChatSessions(response);
     });
-  };
+  }, []);
 
   useEffect(() => {
-    setAllowed(window.localStorage.getItem("allowed") === "true");
+    const isAllowedInitially = window.localStorage.getItem("allowed") === "true";
+    if (isAllowedInitially) {
+      Promise.resolve().then(() => {
+        setAllowed(true);
+      });
+      fetchData();
+    }
 
     const handleValidationStatus = (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -66,6 +71,10 @@ export default function DashboardLayout({
         typeof customEvent.detail.allowed === "boolean"
       ) {
         setAllowed(customEvent.detail.allowed);
+        if (customEvent.detail.allowed) {
+          hasAutoRedirected.current = false;
+          fetchData();
+        }
       }
     };
 
@@ -76,12 +85,10 @@ export default function DashboardLayout({
         handleValidationStatus,
       );
     };
-  }, []);
+  }, [fetchData]);
 
   useEffect(() => {
     if (!allowed) return;
-
-    fetchData();
 
     const handleRefresh = () => {
       fetchData();
@@ -91,7 +98,7 @@ export default function DashboardLayout({
     return () => {
       window.removeEventListener("refreshChatData", handleRefresh);
     };
-  }, [allowed]);
+  }, [allowed, fetchData]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -116,7 +123,10 @@ export default function DashboardLayout({
           <span className="text-lg font-semibold pl-1">InnoAIGateway</span>
         </div>
         <CheckUsageBalanceComponent usageResponse={usageResponse} />
-        <ChatComponent chatSessions={chatSessions} />
+        <ChatComponent
+          chatSessions={chatSessions}
+          // setChatMessages={setChatMessages}
+        />
         <ChatFooterComponent />
       </aside>
       <MainChat chatMessages={chatMessages} />

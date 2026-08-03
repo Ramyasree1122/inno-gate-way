@@ -4,9 +4,18 @@ import { axiosInstance } from "@/lib/axios";
 // Helper functions defined at the top
 const getAiId = () => typeof window !== "undefined" ? window.localStorage.getItem("AI_ID") : null;
 const getUserId = () => typeof window !== "undefined" ? window.localStorage.getItem("USER_ID") : null;
+const isAllowed = () => {
+  const allowed =
+    typeof window !== "undefined" &&
+    window.localStorage.getItem("allowed") === "true";
+  return allowed;
+};
 
 export const chatService = {
   getUserInfo: async () => {
+    if (!isAllowed()) {
+      return;
+    }
     try {
       const response = await axiosInstance.get(API_ENDPOINTS.GET_USER_INFO, {
         headers: {
@@ -18,12 +27,14 @@ export const chatService = {
       console.error("Error fetching usage:", error);
     }
   },
-  
+
   getCheckUsage: async () => {
+    if (!isAllowed()) {
+      return;
+    }
     try {
-      const response = await axiosInstance.get(
-        API_ENDPOINTS.CHECK_USAGE.replace("{id}", getUserId() || ""),
-      );
+      const url = API_ENDPOINTS.CHECK_USAGE.replace("{id}", getUserId() || "");
+      const response = await axiosInstance.get(url);
       return response.data;
     } catch (error) {
       console.error("Error fetching usage:", error);
@@ -31,9 +42,26 @@ export const chatService = {
   },
 
   getChatSessions: async () => {
+    if (!isAllowed()) {
+      return;
+    }
+    try {
+      const url = `${API_ENDPOINTS.GET_CHAT_SESSIONS}?include_archived=false`;
+      const response = await axiosInstance.get(url, {
+        headers: {
+          Authorization: `Bearer ${getAiId()}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching usage:", error);
+    }
+  },
+  getChatById: async (id: string) => {
+    if (!isAllowed()) return;
     try {
       const response = await axiosInstance.get(
-        `${API_ENDPOINTS.GET_CHAT_SESSIONS}?include_archived=false`,
+        API_ENDPOINTS.GET_CHAT_BY_ID.replace("{id}", id),
         {
           headers: {
             Authorization: `Bearer ${getAiId()}`,
@@ -45,21 +73,12 @@ export const chatService = {
       console.error("Error fetching usage:", error);
     }
   },
-  getChatById: async (id:string) => {
+  createChatSession: async (payload: Record<string, unknown>) => {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.GET_CHAT_BY_ID.replace("{id}", id), {
-        headers: {
-          Authorization: `Bearer ${getAiId()}`,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching usage:", error);
-    }
-  },
-  createChatSession: async (payload: any) => {
-    try {
-      const aiId = typeof window !== "undefined" ? window.localStorage.getItem("AI_ID") : null;
+      const aiId =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("AI_ID")
+          : null;
       const response = await axiosInstance.post(
         API_ENDPOINTS.CREATE_CHAT_SESSION,
         payload,
@@ -67,7 +86,7 @@ export const chatService = {
           headers: {
             Authorization: `Bearer ${aiId}`,
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {
@@ -75,9 +94,19 @@ export const chatService = {
       throw error;
     }
   },
-  sendChatCompletion: async (payload: any) => {
+  sendChatCompletion: async (payload: {
+    provider: string;
+    model: string;
+    session_id: string;
+    messages: { role: string; content: string }[];
+    temperature?: number;
+    max_tokens?: number;
+  }) => {
     try {
-      const aiId = typeof window !== "undefined" ? window.localStorage.getItem("AI_ID") : null;
+      const aiId =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("AI_ID")
+          : null;
       const response = await axiosInstance.post(
         API_ENDPOINTS.CHAT_COMPLETIONS,
         payload,
@@ -85,7 +114,7 @@ export const chatService = {
           headers: {
             Authorization: `Bearer ${aiId}`,
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {

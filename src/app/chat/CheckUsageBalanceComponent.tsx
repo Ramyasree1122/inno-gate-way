@@ -1,5 +1,6 @@
+import { UsageResponse } from "./layout";
 interface CheckUsageBalanceProps {
-  usageResponse: any;
+  usageResponse: UsageResponse | null | undefined;
 }
 
 export default function CheckUsageBalanceComponent({
