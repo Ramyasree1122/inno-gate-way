@@ -65,7 +65,7 @@ export function UserLoginForm() {
     setError("");
     try {
       await authService.requestOTP(email);
-      setTimer(60);
+      setTimer(299);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
