@@ -18,7 +18,7 @@ export default function AuthLayout({
           <div className="mb-4">
             {/* Custom Atom icon approximation */}
             <div className="relative w-24 h-24 flex items-center justify-center">
-              <SvgIcon type="ai-icon" className="w-24 h-24 animate-spin" />
+              <SvgIcon type="ai-icon" className="w-24 h-24" />
             </div>
           </div>
           <h1 className="text-4xl font-light whitespace-nowrap">
