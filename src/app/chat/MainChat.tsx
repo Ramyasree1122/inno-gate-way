@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { chatService } from "@/services/chatService";
 
-interface Message {
+export interface Message {
   id: string;
   role: string;
   content: string;
@@ -15,7 +15,7 @@ interface Message {
   provider?: string | null;
 }
 
-interface ChatMessages {
+export interface ChatMessages {
   id: string;
   title: string;
   messages: Message[];
@@ -23,6 +23,12 @@ interface ChatMessages {
 
 interface props {
   chatMessages: ChatMessages | null;
+}
+
+interface SelectedModelType {
+  value: string;
+  label: string;
+  provider?: string;
 }
 
 export default function MainChat({ chatMessages }: props) {
@@ -34,27 +40,42 @@ export default function MainChat({ chatMessages }: props) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isWelcome = pathname === "/chat" || pathname === "/chat/";
-  const chatId = pathname.startsWith("/chat/") && pathname.length > 6 ? pathname.substring(6) : null;
+  const chatId =
+    pathname.startsWith("/chat/") && pathname.length > 6
+      ? pathname.substring(6)
+      : null;
 
-  // Clear input message when switching chats
-  useEffect(() => {
-    setMessageText("");
-  }, [chatId]);
+  const [prevChatId, setPrevChatId] = useState<string | null>(null);
+  const [prevChatMessages, setPrevChatMessages] = useState<ChatMessages | null>(null);
 
-  // Load chat messages based on chatId
-  useEffect(() => {
+  // Sync state when chatId or chatMessages prop changes during render phase
+  if (chatId !== prevChatId || chatMessages !== prevChatMessages) {
+    setPrevChatId(chatId);
+    setPrevChatMessages(chatMessages);
+
+    if (chatId !== prevChatId) {
+      setMessageText("");
+    }
+
     if (chatId) {
       if (chatMessages && chatMessages.id === chatId) {
         setLocalMessages(chatMessages.messages || []);
-      } else {
-        chatService.getChatById(chatId).then((response) => {
-          if (response) {
-            setLocalMessages(response.messages || []);
-          }
-        });
+      } else if (chatId !== prevChatId) {
+        setLocalMessages([]);
       }
     } else {
       setLocalMessages([]);
+    }
+  }
+
+  // Load chat messages asynchronously if needed
+  useEffect(() => {
+    if (chatId && (!chatMessages || chatMessages.id !== chatId)) {
+      chatService.getChatById(chatId).then((response) => {
+        if (response) {
+          setLocalMessages(response.messages || []);
+        }
+      });
     }
   }, [chatId, chatMessages]);
 
@@ -63,11 +84,14 @@ export default function MainChat({ chatMessages }: props) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [localMessages, chatId]);
 
-  const handleSendMessage = async (text: string, selectedModel?: any) => {
+  const handleSendMessage = async (
+    text: string,
+    selectedModel?: SelectedModelType | null,
+  ) => {
     if (!text.trim()) return;
 
     let activeChatId = chatId;
-    
+
     if (!activeChatId) {
       try {
         const response = await chatService.createChatSession({});
@@ -99,7 +123,7 @@ export default function MainChat({ chatMessages }: props) {
       const payload = {
         provider: selectedModel?.provider || "anthropic",
         model: selectedModel?.value || "claude-sonnet-4-6",
-        session_id: activeChatId,
+        session_id: activeChatId || "",
         messages: updatedMessages.map((m) => ({
           role: m.role,
           content: m.content,
@@ -169,7 +193,10 @@ export default function MainChat({ chatMessages }: props) {
       <div className="flex-1 overflow-y-auto w-full">
         <div className="w-full flex justify-center">
           {localMessages.length > 0 && (
-            <ChatConversation messages={localMessages} isGenerating={isGenerating} />
+            <ChatConversation
+              messages={localMessages}
+              isGenerating={isGenerating}
+            />
           )}
         </div>
         <div ref={messagesEndRef} />
