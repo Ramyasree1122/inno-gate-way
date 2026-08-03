@@ -96,8 +96,8 @@ export default function ChatInput({
             });
           } else {
             formattedModels.push({
-              value: provider.id || provider.name || "",
-              label: provider.name || provider.id || "",
+              value: provider.id || "",
+              label: provider.name || "",
               provider: provider.id || provider.name,
             });
           }
