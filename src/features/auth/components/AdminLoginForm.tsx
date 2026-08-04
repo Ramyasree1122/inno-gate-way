@@ -164,9 +164,7 @@ export default function AdminLoginForm() {
                 type="email"
                 placeholder="Enter your Email"
                 className={`flex w-full rounded-md border p-2 text-sm placeholder:text-[#737373] focus-visible:outline-none shadow-xs shadow-[#E5E5E5] disabled:cursor-not-allowed disabled:opacity-50 ${
-                  error
-                    ? "border-red-500 focus-visible:ring-red-500"
-                    : "border-[#E5E5E5] focus-visible:ring-[var(--color-brand-purple)]"
+                  error ? "border-red-500" : "border-[#E5E5E5] "
                 }`}
                 {...form.register("email")}
               />
