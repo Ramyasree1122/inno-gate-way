@@ -76,13 +76,13 @@ export function UserLoginForm() {
   };
 
   const emailForm = useRHForm<EmailFormValues>({
-    resolver: zodResolver(emailSchema),
+    resolver: zodResolver(emailSchema as any),
     defaultValues: { email: "" },
     mode: "onChange",
   });
 
   const otpForm = useRHForm<OtpFormValues>({
-    resolver: zodResolver(otpSchema),
+    resolver: zodResolver(otpSchema as any),
     defaultValues: { otp: "" },
     mode: "onChange",
   });

@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const mockAdmin: User = { id: '2', email, role, name: role };
         setUser(mockAdmin);
         localStorage.setItem('mockUser', JSON.stringify(mockAdmin));
-        router.push('/chat');
+        router.push('/dashboard');
       } else {
         setIsLoading(false);
         throw new Error('Invalid Credentials');
