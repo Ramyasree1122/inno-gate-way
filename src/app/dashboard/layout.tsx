@@ -31,10 +31,6 @@ export default function DashboardLayout({
           <Link href="/dashboard/history" className="flex items-center px-3 py-2.5 text-zinc-600 hover:bg-zinc-50 rounded-md font-medium transition-colors">
             History
           </Link>
-
-          <Link href="/dashboard/usage" className="flex items-center px-3 py-2.5 text-zinc-600 hover:bg-zinc-50 rounded-md font-medium transition-colors">
-            Cost / Usage
-          </Link>
         </nav>
 
         <div className="p-4 border-t border-zinc-100">
