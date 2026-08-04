@@ -28,7 +28,7 @@ export const authService = {
    */
   loginAdmin: async (email: string, password: string) => {
     // TODO: Replace with your actual backend endpoint
-    // return post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, { email, password });
+    return post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, { email, password });
   },
 
   /**
