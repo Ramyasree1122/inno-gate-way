@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
     PROVIDERS: "/api/providers",
     VALIDATE: (provider: string) => `/api/providers/${provider}/validate`,
     LOGOUT: "/api/auth/logout",
+    ADMIN_LOGIN: "/api/auth/login",
   },
   CHECK_USAGE: "/api/analytics/users/{id}/usage",
   GET_CHAT_SESSIONS: "/api/chat/sessions",
