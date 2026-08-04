@@ -9,6 +9,7 @@ import { Loader2, Eye, EyeOff, OctagonAlert } from "lucide-react";
 import SvgIcon from "@/components/svgIcons";
 import { authService } from "@/services/authService";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const adminLoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -21,7 +22,8 @@ export default function AdminLoginForm() {
   const [view, setView] = useState<"login" | "forgot">("login");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const { loginAdmin, isLoading } = useAuth();
+  const { isLoading } = useAuth();
+  const router = useRouter();
 
   // Forgot password states
   const [resetEmail, setResetEmail] = useState("");
@@ -30,18 +32,16 @@ export default function AdminLoginForm() {
   const [isSendingReset, setIsSendingReset] = useState(false);
 
   const form = useRHForm<AdminFormValues>({
-    resolver: zodResolver(adminLoginSchema),
+    resolver: zodResolver(adminLoginSchema as any),
     defaultValues: { email: "", password: "" },
     mode: "onChange",
   });
 
   const onSubmit = async (data: AdminFormValues) => {
     setError("");
-    console.log("Email:", data.email);
-    console.log("Password:", data.password);
     try {
       const response = await authService.loginAdmin(data.email, data.password);
-      console.log("Login response:", response);
+      router.push("/dashboard");
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.detail);
