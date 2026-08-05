@@ -20,6 +20,8 @@ import { MoreVertical } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+import dayjs from "dayjs";
+
 export type TableColumn<T> = {
   key: keyof T | string;
   title: string;
@@ -39,18 +41,15 @@ interface CommonTableProps<T> {
   bodyClassName?: string;
 }
 
-function formatDate(value: unknown): string {
+export function formatDate(value: unknown): string {
   if (value === null || value === undefined) return "";
   const dateStr = String(value);
   // Match typical date formats: ISO format 2026-08-05T06:34:29Z or YYYY-MM-DD
   const dateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
   if (dateRegex.test(dateStr)) {
-    const date = new Date(dateStr);
-    if (!isNaN(date.getTime())) {
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
+    const d = dayjs(dateStr);
+    if (d.isValid()) {
+      return d.format("DD/MM/YYYY");
     }
   }
   return dateStr;

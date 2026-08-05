@@ -5,6 +5,10 @@ import { SquarePen, Trash2 } from "lucide-react";
 import { SearchInput } from "@/components/common/SearchInput";
 import { CommonTable } from "@/components/common/CommonTable";
 import { Copy, ChevronRight } from "lucide-react";
+import {
+  formatLastUsed,
+  formatExpiresOn,
+} from "@/components/common/CommonFunctions";
 
 interface Workspace {
   id: string;
@@ -49,53 +53,9 @@ const CopyButton = ({ text }: { text: string }) => {
   );
 };
 
-function formatLastUsed(dateString: string | null): string {
-  if (!dateString) return "";
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return "1m ago";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d ago`;
-  } catch (e) {
-    return dateString;
-  }
-}
-
-function formatExpiresOn(dateString: string | null): string {
-  if (!dateString) return "";
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-
-    return `${day}/${month}/${year}, ${hours}:${minutes} ${ampm}`;
-  } catch (e) {
-    return dateString;
-  }
-}
-
 export default function KeyManagementPage() {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
   const [apiKeys, setApiKeys] = React.useState<ApiKey[]>([]);
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,12 +89,6 @@ export default function KeyManagementPage() {
   const handleDeleteApiKey = (apiKey: ApiKey) => {
     console.log("Delete API Key:", apiKey);
   };
-
-  // Slice keys for pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentApiKeys = apiKeys.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(apiKeys.length / itemsPerPage) || 1;
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -185,7 +139,7 @@ export default function KeyManagementPage() {
         </div>
 
         <CommonTable
-          data={currentApiKeys}
+          data={apiKeys}
           columns={[
             { key: "workspace_name", title: "Workspace" },
             { key: "owner", title: "User Email" },
@@ -236,43 +190,6 @@ export default function KeyManagementPage() {
           headerClassName="text-[#737373] text-sm font-medium"
           bodyClassName="text-sm text-[#0A0A0A] font-normal"
         />
-
-        {/* Pagination UI */}
-        {apiKeys.length > 0 && (
-          <div className="flex justify-between items-center w-full mt-4 px-2 text-sm text-black font-medium">
-            <div>
-              Showing {indexOfFirstItem + 1}-
-              {Math.min(indexOfLastItem, apiKeys.length)} of {apiKeys.length}{" "}
-              total keys
-            </div>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`h-8 w-8 rounded-md flex items-center justify-center transition-colors cursor-pointer text-sm ${
-                      currentPage === page
-                        ? "border border-[#E5E5E5] rounded-md bg-white text-black font-medium shadow-xs"
-                        : "hover:bg-neutral-100 text-[#0A0A0A]"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ),
-              )}
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="h-8 px-3 rounded-md border  bg-[#F5F5F5] text-[#171717] font-medium hover:bg-neutral-50 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed text-sm ml-2"
-              >
-                Next <ChevronRight className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
