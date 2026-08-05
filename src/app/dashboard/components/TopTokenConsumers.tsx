@@ -33,7 +33,7 @@ export default function TopTokenConsumers() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold text-neutral-900">Top Token Consumers</h2>
         
-        <div className="w-[140px] shrink-0">
+        <div className="w-[150px] shrink-0">
           <Select defaultValue="Last 24 hours">
             <SelectTrigger className="w-full h-8 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md">
               <SelectValue placeholder="Select range" />
@@ -41,6 +41,7 @@ export default function TopTokenConsumers() {
             <SelectContent align="end" alignItemWithTrigger={false}>
               <SelectItem value="Last 24 hours" className="text-xs">Last 24 hours</SelectItem>
               <SelectItem value="Last 7 days" className="text-xs">Last 7 days</SelectItem>
+              <SelectItem value="Last 30 days" className="text-xs">Last 30 days</SelectItem>
               <SelectItem value="All time" className="text-xs">All time</SelectItem>
             </SelectContent>
           </Select>
