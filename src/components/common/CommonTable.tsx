@@ -1,0 +1,154 @@
+"use client";
+
+import * as React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+export type TableColumn<T> = {
+  key: keyof T | string;
+  title: string;
+  className?: string;
+  render?: (row: T) => React.ReactNode;
+};
+
+interface CommonTableProps<T> {
+  columns: TableColumn<T>[];
+  data: T[];
+  emptyMessage?: string;
+  rowKey?: keyof T | ((row: T, index: number) => React.Key);
+  className?: string;
+  onEdit?: (row: T) => void;
+  onDelete?: (row: T) => void;
+  headerClassName?: string;
+  bodyClassName?: string;
+}
+
+function formatDate(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const dateStr = String(value);
+  // Match typical date formats: ISO format 2026-08-05T06:34:29Z or YYYY-MM-DD
+  const dateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+  if (dateRegex.test(dateStr)) {
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  }
+  return dateStr;
+}
+
+export function CommonTable<T>({
+  columns,
+  data = [],
+  emptyMessage = "No records found.",
+  rowKey,
+  className,
+  onEdit,
+  onDelete,
+  headerClassName,
+  bodyClassName,
+}: CommonTableProps<T>) {
+  const hasActions = Boolean(onEdit || onDelete);
+
+  return (
+    <div className={`rounded-lg border bg-white w-full overflow-x-auto ${className ?? ""}`}>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead
+                key={column.key.toString()}
+                className={cn(headerClassName, column.className)}
+              >
+                {column.title}
+              </TableHead>
+            ))}
+            {hasActions && <TableHead className="w-[50px]" />}
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
+          {data.length ? (
+            data.map((row, index) => (
+              <TableRow
+                key={
+                  typeof rowKey === "function"
+                    ? rowKey(row, index)
+                    : rowKey
+                    ? String(row[rowKey])
+                    : index
+                }
+              >
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.key.toString()}
+                    className={cn(bodyClassName, column.className)}
+                  >
+                    {column.render
+                      ? column.render(row)
+                      : formatDate(row[column.key as keyof T] ?? "")}
+                  </TableCell>
+                ))}
+                {hasActions && (
+                  <TableCell className="w-[50px] text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-neutral-100 transition-colors cursor-pointer outline-none border-none">
+                        <MoreVertical className="h-4 w-4 text-neutral-500" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-[120px] bg-white border border-neutral-200 shadow-lg rounded-md p-1">
+                        {onEdit && (
+                          <DropdownMenuItem
+                            onClick={() => onEdit(row)}
+                            className="cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors flex items-center gap-2"
+                          >
+                            Edit
+                          </DropdownMenuItem>
+                        )}
+                        {onDelete && (
+                          <DropdownMenuItem
+                            onClick={() => onDelete(row)}
+                            className="cursor-pointer px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors flex items-center gap-2"
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length + (hasActions ? 1 : 0)}
+                className="h-24 text-center text-muted-foreground"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}

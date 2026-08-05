@@ -16,4 +16,6 @@ export const API_ENDPOINTS = {
   DASHBOARD_SUMMARY: "/api/analytics/summary",
   DASHBOARD_DAILY: "/api/analytics/daily",
   DASHBOARD_TOP_USERS: "/api/analytics/top-users",
+  GET_WORKSPACES: "/api/workspaces",
+  GET_API_KEYS: "/api/api-keys",
 };
