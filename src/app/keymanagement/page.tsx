@@ -9,6 +9,7 @@ import {
   formatLastUsed,
   formatExpiresOn,
 } from "@/components/common/CommonFunctions";
+import { CommonModal } from "@/components/common/CommonModal";
 
 interface Workspace {
   id: string;
@@ -57,15 +58,39 @@ export default function KeyManagementPage() {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
   const [apiKeys, setApiKeys] = React.useState<ApiKey[]>([]);
 
+  // Modal states
+  const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = React.useState("");
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [editingWorkspace, setEditingWorkspace] =
+    React.useState<Workspace | null>(null);
+  const [editWorkspaceName, setEditWorkspaceName] = React.useState("");
+
+  const fetchWorkspaces = async () => {
+    try {
+      const workspaces = await keymanagementService.getAllWorkspaces();
+      setWorkspaces(workspaces || []);
+    } catch (error) {
+      console.error("Error fetching workspaces:", error);
+    }
+  };
+
+  const fetchApiKeys = async () => {
+    try {
+      const apiKeys = await keymanagementService.getAllAPIkeys();
+      setApiKeys(apiKeys || []);
+    } catch (error) {
+      console.error("Error fetching API keys:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const workspaces = await keymanagementService.getAllWorkspaces();
-        setWorkspaces(workspaces || []);
-        const apiKeys = await keymanagementService.getAllAPIkeys();
-        setApiKeys(apiKeys || []);
+        await fetchWorkspaces();
+        await fetchApiKeys();
       } catch (error) {
-        console.error("Error fetching workspaces:", error);
+        console.error("Error fetching data:", error);
       }
     };
 
@@ -73,8 +98,9 @@ export default function KeyManagementPage() {
   }, []);
 
   const handleEditWorkspace = (workspace: Workspace) => {
-    console.log("Edit workspace:", workspace);
-    // Add edit functionality here
+    setEditingWorkspace(workspace);
+    setEditWorkspaceName(workspace.name);
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteWorkspace = (workspace: Workspace) => {
@@ -90,11 +116,123 @@ export default function KeyManagementPage() {
     console.log("Delete API Key:", apiKey);
   };
 
+  const handleCreateWorkspaceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newWorkspaceName.trim()) return;
+    try {
+      const response =
+        await keymanagementService.createWorkspace(newWorkspaceName);
+      if (response) {
+        await fetchWorkspaces();
+      }
+    } catch (error) {
+      console.error("Error creating workspace:", error);
+    }
+    setIsCreateModalOpen(false);
+    setNewWorkspaceName("");
+  };
+
+  const handleEditWorkspaceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingWorkspace || !editWorkspaceName.trim()) return;
+    try {
+      const response = await keymanagementService.updateWorkspace(
+        editingWorkspace.id,
+        editWorkspaceName,
+      );
+      if (response) {
+        await fetchWorkspaces();
+      }
+    } catch (error) {
+      console.error("Error updating workspace:", error);
+    }
+    setIsEditModalOpen(false);
+    setEditingWorkspace(null);
+    setEditWorkspaceName("");
+  };
+
   return (
     <div className="w-full h-full flex flex-col">
       <h1 className="text-2xl font-semibold text-zinc-950 mb-4">
         Key Management
       </h1>
+
+      {/* Create Workspace Modal */}
+      <CommonModal
+        isOpen={isCreateModalOpen}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setNewWorkspaceName("");
+        }}
+        title="Create Workspace"
+        className="max-w-[380px]"
+      >
+        <form onSubmit={handleCreateWorkspaceSubmit} className="space-y-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-[#0A0A0A]">
+              Workspace name
+            </label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter a workspace name"
+              value={newWorkspaceName}
+              onChange={(e) => setNewWorkspaceName(e.target.value)}
+              className="flex w-full rounded-md border border-[#E5E5E5] px-3 py-2 text-sm placeholder:text-[#737373] focus-visible:outline-none shadow-xs shadow-[#E5E5E5]"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!newWorkspaceName.trim()}
+            className={`w-full py-2 rounded-md font-medium text-sm transition-colors mt-2 ${
+              newWorkspaceName.trim()
+                ? "bg-[linear-gradient(90deg,#AC6AEE_0%,#3D30F4_100%)] text-white cursor-pointer"
+                : "bg-[#171717] text-white cursor-not-allowed opacity-50"
+            }`}
+          >
+            Create
+          </button>
+        </form>
+      </CommonModal>
+
+      {/* Edit Workspace Modal */}
+      <CommonModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingWorkspace(null);
+          setEditWorkspaceName("");
+        }}
+        title="Edit Workspace Name"
+        className="max-w-[380px]"
+      >
+        <form onSubmit={handleEditWorkspaceSubmit} className="space-y-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-[#0A0A0A]">
+              Workspace name
+            </label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter a workspace name"
+              value={editWorkspaceName}
+              onChange={(e) => setEditWorkspaceName(e.target.value)}
+              className="flex w-full rounded-md border border-[#E5E5E5] px-3 py-2 text-sm placeholder:text-[#737373] focus-visible:outline-none shadow-xs shadow-[#E5E5E5]"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!editWorkspaceName.trim()}
+            className={`w-full py-2 rounded-md font-medium text-sm transition-colors mt-2 ${
+              editWorkspaceName.trim()
+                ? "bg-[linear-gradient(90deg,#AC6AEE_0%,#3D30F4_100%)] text-white cursor-pointer"
+                : "bg-neutral-300 text-white cursor-not-allowed"
+            }`}
+          >
+            Save
+          </button>
+        </form>
+      </CommonModal>
 
       {/* Workspaces Section */}
       <div className="bg-white rounded-lg p-3 mb-4 border border-neutral-200">
@@ -103,9 +241,16 @@ export default function KeyManagementPage() {
         </h2>
         <div className="flex justify-between items-center w-full mb-4">
           <div className="w-72">
-            <SearchInput placeholder="Search workspaces..." />
+            <SearchInput
+              placeholder="Search workspaces..."
+              className="text-xs font-normal text-[#737373] "
+              containerClassName="rounded-md border-[#E5E5E5] shadow-xs"
+            />
           </div>
-          <button className="bg-[#F5F5F5] hover:bg-[#E5E5E5] text-[#9333EA] text-sm font-medium px-3 py-2 rounded-md shadow-xs transition-colors cursor-pointer">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-[#F5F5F5] hover:bg-[#E5E5E5] text-[#9333EA] text-sm font-medium px-3 py-2 rounded-md shadow-xs transition-colors cursor-pointer"
+          >
             Create Workspace
           </button>
         </div>
@@ -131,7 +276,11 @@ export default function KeyManagementPage() {
         </h3>
         <div className="flex justify-between items-center w-full mb-4">
           <div className="w-72">
-            <SearchInput placeholder="Search API keys..." />
+            <SearchInput
+              placeholder="Search workspaces,users and API keys..."
+              className="text-xs font-normal text-[#737373]"
+              containerClassName="rounded-md border-[#E5E5E5] shadow-xs"
+            />
           </div>
           <button className="bg-[#F5F5F5] hover:bg-[#E5E5E5] text-[#9333EA] text-sm font-medium px-3 py-2 rounded-md shadow-xs transition-colors cursor-pointer">
             Create API Key
@@ -168,7 +317,7 @@ export default function KeyManagementPage() {
                     Enabled
                   </span>
                 ) : (
-                  <span className="bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded-md text-xs font-medium inline-block">
+                  <span className="bg-[#F5F5F5] text-[#171717] border-[#FFFFFF] px-2 py-0.5 rounded-md text-xs font-medium">
                     Disabled
                   </span>
                 ),
