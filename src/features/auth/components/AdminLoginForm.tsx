@@ -42,7 +42,7 @@ export default function AdminLoginForm() {
   const [updateError, setUpdateError] = useState("");
 
   const form = useRHForm<AdminFormValues>({
-    resolver: zodResolver(adminLoginSchema),
+    resolver: zodResolver(adminLoginSchema as any),
     defaultValues: { email: "", password: "" },
     mode: "onChange",
   });
