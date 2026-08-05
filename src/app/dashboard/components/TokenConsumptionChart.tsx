@@ -79,7 +79,7 @@ export default function TokenConsumptionChart() {
           </div>
         </div>
         
-        <div className="w-[170px] shrink-0">
+        <div className="w-[150px] shrink-0">
           <Select defaultValue="Today">
             <SelectTrigger className="w-full h-8 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md">
               <SelectValue placeholder="Select range" />
