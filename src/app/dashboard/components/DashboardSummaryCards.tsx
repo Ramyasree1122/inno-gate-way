@@ -2,14 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Coins,
-  Users,
-  Activity,
-  Key,
-  UserCheck,
-  AlertTriangle,
-} from "lucide-react";
-import {
   dashboardService,
   DashboardSummaryResponse,
 } from "@/services/dashboardService";
