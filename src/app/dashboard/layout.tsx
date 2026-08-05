@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
 import DashboardFooterComponent from "./components/DashboardFooterComponent";
+import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
   children,
@@ -11,42 +12,62 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { logout } = useAuth();
-  
+  const pathname = usePathname();
   return (
     <div className="min-h-screen flex bg-zinc-50 overflow-hidden text-sm">
       {/* Sidebar */}
       <aside className="w-64 bg-white flex flex-col shadow-[0_0_15px_rgba(0,0,0,0.05)] border-r border-zinc-200">
         <div className="h-16 flex items-center px-6 border-b border-zinc-100">
-          <span className="text-base font-semibold pl-2 text-zinc-800">InnoAIGateway Admin</span>
+          <span className="text-base font-semibold pl-2 text-zinc-800">
+            InnoAIGateway Admin
+          </span>
         </div>
-        
+
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          <Link href="/dashboard" className="flex items-center px-3 py-2.5 bg-[#F9F5FF] text-[var(--color-brand-purple)] rounded-md font-medium">
+          <Link
+            href="/dashboard"
+            className={`flex items-center px-3 py-2.5 rounded-md font-medium transition-colors ${
+              pathname === "/dashboard"
+                ? "bg-[#F9F5FF] text-[var(--color-brand-purple)]"
+                : "text-zinc-600 hover:bg-zinc-50"
+            }`}
+          >
             Dashboard
           </Link>
-          
-          <Link href="/dashboard/keys" className="flex items-center px-3 py-2.5 text-zinc-600 hover:bg-zinc-50 rounded-md font-medium transition-colors">
+
+          <Link
+            href="/keymanagement"
+            className={`flex items-center px-3 py-2.5 rounded-md font-medium transition-colors ${
+              pathname === "/keymanagement"
+                ? "bg-[#F9F5FF] text-[var(--color-brand-purple)]"
+                : "text-zinc-600 hover:bg-zinc-50"
+            }`}
+          >
             Key Management
           </Link>
 
-          <Link href="/dashboard/history" className="flex items-center px-3 py-2.5 text-zinc-600 hover:bg-zinc-50 rounded-md font-medium transition-colors">
+          <Link
+            href="/dashboard/history"
+            className={`flex items-center px-3 py-2.5 rounded-md font-medium transition-colors ${
+              pathname === "/dashboard/history"
+                ? "bg-[#F9F5FF] text-[var(--color-brand-purple)]"
+                : "text-zinc-600 hover:bg-zinc-50"
+            }`}
+          >
             History
           </Link>
         </nav>
 
         <DashboardFooterComponent />
       </aside>
-      
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#FAFAFA]">
         {/* Top Header */}
-        <header className="h-16 flex items-center justify-between px-8 bg-white border-b border-zinc-100 shrink-0">
-        </header>
+        <header className="h-16 flex items-center justify-between px-8 bg-white border-b border-zinc-100 shrink-0"></header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-8">
-          {children}
-        </div>
+        <div className="flex-1 overflow-auto p-4">{children}</div>
       </main>
     </div>
   );
