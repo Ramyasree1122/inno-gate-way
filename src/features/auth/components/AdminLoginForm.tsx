@@ -40,7 +40,15 @@ export default function AdminLoginForm() {
   const onSubmit = async (data: AdminFormValues) => {
     setError("");
     try {
-      const response = await authService.loginAdmin(data.email, data.password);
+      const response: any = await authService.loginAdmin(data.email, data.password);
+      
+      if (response?.access_token || response?.data?.access_token) {
+        localStorage.setItem('token', response.access_token || response.data.access_token);
+      }
+      
+      const userObj = { id: '2', email: data.email, role: 'Admin', name: 'Admin' };
+      localStorage.setItem('mockUser', JSON.stringify(userObj));
+
       router.push("/dashboard");
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
