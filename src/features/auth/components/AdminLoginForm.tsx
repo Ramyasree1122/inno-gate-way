@@ -18,6 +18,13 @@ const adminLoginSchema = z.object({
 
 type AdminFormValues = z.infer<typeof adminLoginSchema>;
 
+interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  role: string;
+}
+
+
 export default function AdminLoginForm() {
   const [view, setView] = useState<
     "login" | "forgot" | "create-password" | "success"
@@ -42,18 +49,21 @@ export default function AdminLoginForm() {
   const [updateError, setUpdateError] = useState("");
 
   const form = useRHForm<AdminFormValues>({
-    resolver: zodResolver(adminLoginSchema as any),
+    resolver: zodResolver(adminLoginSchema),
     defaultValues: { email: "", password: "" },
     mode: "onChange",
   });
-
   const onSubmit = async (data: AdminFormValues) => {
     setError("");
     try {
-      const response: any = await authService.loginAdmin(data.email, data.password);
+      const response = (await authService.loginAdmin(
+        data.email,
+        data.password
+      )) as { access_token?: string; data?: { access_token?: string } } | undefined;
       
-      if (response?.access_token || response?.data?.access_token) {
-        localStorage.setItem('token', response.access_token || response.data.access_token);
+      const token = response?.access_token || response?.data?.access_token;
+      if (token) {
+        localStorage.setItem('token', token);
       }
       
       const userObj = { id: '2', email: data.email, role: 'Admin', name: 'Admin' };
