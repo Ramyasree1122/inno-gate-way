@@ -35,14 +35,14 @@ export const authService = {
    * Logout user
    * Clears localStorage and redirects user to the login page.
    */
-  logoutUser: async () => {
+  logoutUser: async (redirectPath: string = "/login") => {
     try {
       await post(API_ENDPOINTS.AUTH.LOGOUT);
     } catch (error) {
       console.error("Failed to logout from backend:", error);
     } finally {
       window.localStorage.clear();
-      window.location.href = "/login";
+      window.location.href = redirectPath;
     }
   },
 };

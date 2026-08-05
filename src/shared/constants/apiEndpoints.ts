@@ -13,4 +13,7 @@ export const API_ENDPOINTS = {
   GET_USER_INFO: "/api/gateway-keys/me",
   GET_CHAT_BY_ID: "/api/chat/sessions/{id}",
   CHAT_COMPLETIONS: "/api/v1/chat/completions",
+  DASHBOARD_SUMMARY: "/api/analytics/summary",
+  DASHBOARD_DAILY: "/api/analytics/daily",
+  DASHBOARD_TOP_USERS: "/api/analytics/top-users",
 };

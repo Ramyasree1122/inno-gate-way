@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
+import DashboardFooterComponent from "./components/DashboardFooterComponent";
 
 export default function DashboardLayout({
   children,
@@ -33,11 +34,7 @@ export default function DashboardLayout({
           </Link>
         </nav>
 
-        <div className="p-4 border-t border-zinc-100">
-          <button onClick={logout} className="flex w-full items-center px-3 py-2.5 text-zinc-600 hover:bg-zinc-50 rounded-md font-medium transition-colors">
-            Logout
-          </button>
-        </div>
+        <DashboardFooterComponent />
       </aside>
       
       {/* Main Content */}
