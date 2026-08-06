@@ -37,6 +37,10 @@ interface CommonTableProps<T> {
   className?: string;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  onChangeWorkspace?: (row: T) => void;
+  onExtendDuration?: (row: T) => void;
+  onRegenerateKey?: (row: T) => void;
+  onDisableKey?: (row: T) => void;
   headerClassName?: string;
   bodyClassName?: string;
 }
@@ -63,10 +67,21 @@ export function CommonTable<T>({
   className,
   onEdit,
   onDelete,
+  onChangeWorkspace,
+  onExtendDuration,
+  onRegenerateKey,
+  onDisableKey,
   headerClassName,
   bodyClassName,
 }: CommonTableProps<T>) {
-  const hasActions = Boolean(onEdit || onDelete);
+  const hasActions = Boolean(
+    onEdit ||
+      onDelete ||
+      onChangeWorkspace ||
+      onExtendDuration ||
+      onRegenerateKey ||
+      onDisableKey
+  );
 
   return (
     <div className={`rounded-lg border bg-white w-full overflow-x-auto ${className ?? ""}`}>
@@ -113,11 +128,43 @@ export function CommonTable<T>({
                       <DropdownMenuTrigger className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-neutral-100 transition-colors cursor-pointer outline-none border-none">
                         <MoreVertical className="h-4 w-4 text-neutral-500" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[120px] bg-white border border-neutral-200 shadow-lg rounded-md p-1">
+                      <DropdownMenuContent align="end" className="w-[160px] bg-white border border-neutral-200 shadow-lg rounded-md p-1 z-50">
+                        {onChangeWorkspace && (
+                          <DropdownMenuItem
+                            onClick={() => onChangeWorkspace(row)}
+                            className="cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:!bg-neutral-100 data-[focus]:!bg-neutral-100 rounded-md transition-colors flex items-center gap-2"
+                          >
+                            Change Workspace
+                          </DropdownMenuItem>
+                        )}
+                        {onExtendDuration && (
+                          <DropdownMenuItem
+                            onClick={() => onExtendDuration(row)}
+                            className="cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:!bg-neutral-100 data-[focus]:!bg-neutral-100 rounded-md transition-colors flex items-center gap-2"
+                          >
+                            Extend Duration
+                          </DropdownMenuItem>
+                        )}
+                        {onRegenerateKey && (
+                          <DropdownMenuItem
+                            onClick={() => onRegenerateKey(row)}
+                            className="cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:!bg-neutral-100 data-[focus]:!bg-neutral-100 rounded-md transition-colors flex items-center gap-2"
+                          >
+                            Regenerate Key
+                          </DropdownMenuItem>
+                        )}
+                        {onDisableKey && (
+                          <DropdownMenuItem
+                            onClick={() => onDisableKey(row)}
+                            className="cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:!bg-neutral-100 data-[focus]:!bg-neutral-100 rounded-md transition-colors flex items-center gap-2"
+                          >
+                            {(row as { is_active?: boolean }).is_active ? "Disable Key" : "Enable Key"}
+                          </DropdownMenuItem>
+                        )}
                         {onEdit && (
                           <DropdownMenuItem
                             onClick={() => onEdit(row)}
-                            className="cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors flex items-center gap-2"
+                            className="cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:!bg-neutral-100 data-[focus]:!bg-neutral-100 rounded-md transition-colors flex items-center gap-2"
                           >
                             Edit
                           </DropdownMenuItem>
@@ -125,7 +172,7 @@ export function CommonTable<T>({
                         {onDelete && (
                           <DropdownMenuItem
                             onClick={() => onDelete(row)}
-                            className="cursor-pointer px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors flex items-center gap-2"
+                            className="cursor-pointer px-3 py-2 text-sm text-red-600 hover:!bg-red-50 data-[focus]:!bg-red-55 rounded-md transition-colors flex items-center gap-2"
                           >
                             Delete
                           </DropdownMenuItem>
