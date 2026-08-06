@@ -1,10 +1,9 @@
 "use client";
 import { keymanagementService } from "@/services/keymanagementService";
 import React, { useEffect } from "react";
-import { SquarePen, Trash2 } from "lucide-react";
 import { SearchInput } from "@/components/common/SearchInput";
 import { CommonTable } from "@/components/common/CommonTable";
-import { Copy, ChevronRight } from "lucide-react";
+import { Copy } from "lucide-react";
 import {
   formatLastUsed,
   formatExpiresOn,

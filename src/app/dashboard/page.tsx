@@ -3,6 +3,7 @@ import DashboardSummaryCards from "./components/DashboardSummaryCards";
 import TokenConsumptionChart from "./components/TokenConsumptionChart";
 import LatencyAndErrorsChart from "./components/LatencyAndErrorsChart";
 import TopTokenConsumers from "./components/TopTokenConsumers";
+import LatestAPIKeys from "./components/LatestAPIKeys";
 
 export default function DashboardPage() {
   return (
@@ -18,6 +19,7 @@ export default function DashboardPage() {
           <TopTokenConsumers />
         </div>
       </div>
+      <LatestAPIKeys />
     </div>
   );
 }

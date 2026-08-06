@@ -1,63 +1,47 @@
 import { axiosInstance } from "@/lib/axios";
 import { API_ENDPOINTS } from "@/shared/constants/apiEndpoints";
 
-const bearerToken = typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
-
 export const keymanagementService = {
   getAllWorkspaces: async () => {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.GET_WORKSPACES, {
-        headers: {
-          authorization: `Bearer ${bearerToken}`,
-        },
-      });
+      const response = await axiosInstance.get(API_ENDPOINTS.GET_WORKSPACES);
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching workspaces:", error);
+      throw error;
     }
   },
   createWorkspace: async (workspaceName: string) => {
     try {
       const response = await axiosInstance.post(
         API_ENDPOINTS.GET_WORKSPACES,
-        { name: workspaceName },
-        {
-          headers: {
-            authorization: `Bearer ${bearerToken}`,
-          },
-        },
+        { name: workspaceName }
       );
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error("Error creating workspace:", error);
+      throw error;
     }
   },
   updateWorkspace: async (workspaceId: string, workspaceName: string) => {
     try {
       const response = await axiosInstance.patch(
         `${API_ENDPOINTS.GET_WORKSPACES}/${workspaceId}`,
-        { name: workspaceName },
-        {
-          headers: {
-            authorization: `Bearer ${bearerToken}`,
-          },
-        },
+        { name: workspaceName }
       );
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error("Error updating workspace:", error);
+      throw error;
     }
   },
   getAllAPIkeys: async () => {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.GET_API_KEYS, {
-        headers: {
-          authorization: `Bearer ${bearerToken}`,
-        },
-      });
+      const response = await axiosInstance.get(API_ENDPOINTS.GET_API_KEYS);
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching API keys:", error);
+      throw error;
     }
   },
 };

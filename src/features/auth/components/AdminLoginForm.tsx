@@ -49,7 +49,8 @@ export default function AdminLoginForm() {
   const [updateError, setUpdateError] = useState("");
 
   const form = useRHForm<AdminFormValues>({
-    resolver: zodResolver(adminLoginSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(adminLoginSchema as any),
     defaultValues: { email: "", password: "" },
     mode: "onChange",
   });
