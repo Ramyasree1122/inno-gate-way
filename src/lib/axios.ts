@@ -12,7 +12,18 @@ export const axiosInstance: AxiosInstance = axios.create({
 // Add a request interceptor for tokens if needed
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Inject authorization tokens here if they exist
+    // 1. Check if the 'Skip-Auth' header was explicitly passed
+    if (config.headers && (config.headers as any)['Skip-Auth']) {
+      // Remove it so it doesn't get sent to the server
+      if (typeof config.headers.delete === "function") {
+        config.headers.delete('Skip-Auth');
+      } else {
+        delete (config.headers as any)['Skip-Auth'];
+      }
+      return config;
+    }
+
+    // 2. Inject authorization tokens here if they exist
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem("token");
       if (token) {

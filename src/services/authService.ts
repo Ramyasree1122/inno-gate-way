@@ -11,7 +11,9 @@ export const authService = {
    * Sends an OTP to the provided email.
    */
   requestOTP: async (email: string) => {
-    return post(API_ENDPOINTS.AUTH.REQUEST_OTP, { email });
+    return post(API_ENDPOINTS.AUTH.REQUEST_OTP, { email }, {
+      headers: { 'Skip-Auth': 'true' }
+    });
   },
 
   /**
@@ -20,7 +22,9 @@ export const authService = {
    */
   loginUser: async (email: string, otp: string) => {
     // The backend expects the OTP to be sent in the 'code' field
-    return post(API_ENDPOINTS.AUTH.VERIFY_OTP, { email, code: otp });
+    return post(API_ENDPOINTS.AUTH.VERIFY_OTP, { email, code: otp }, {
+      headers: { 'Skip-Auth': 'true' }
+    });
   },
 
   /**
@@ -28,7 +32,9 @@ export const authService = {
    */
   loginAdmin: async (email: string, password: string) => {
     // TODO: Replace with your actual backend endpoint
-    return post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, { email, password });
+    return post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, { email, password }, {
+      headers: { 'Skip-Auth': 'true' }
+    });
   },
 
   /**
