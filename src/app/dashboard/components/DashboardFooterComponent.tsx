@@ -29,43 +29,45 @@ export default function DashboardFooterComponent() {
 
   return (
     <>
-      <div className="p-4 border-t border-zinc-100 mt-auto shrink-0">
-        <div className="flex w-full items-center justify-between min-w-0 gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(90deg,#AC6AEE_0%,#3D30F4_100%)]">
-              <span className="text-sm font-semibold text-white">
-                {user?.email?.[0]?.toUpperCase() || "A"}
-              </span>
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <div className="flex w-full items-center justify-between p-4 border-t border-zinc-100 mt-auto shrink-0 hover:bg-zinc-50 transition-colors focus:outline-none">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-400">
+                <span className="text-sm font-semibold text-white">
+                  {user?.email?.[0]?.toUpperCase() || "A"}
+                </span>
+              </div>
+
+              <p className="text-xs font-medium text-neutral-900 truncate">
+                {user?.email || "admin@innogateway.com"}
+              </p>
             </div>
-
-            <p className="text-xs font-medium text-neutral-900 truncate">
-              {user?.email || "admin@innogateway.com"}
-            </p>
+            <ChevronDown size={18} className="text-zinc-600" />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="rounded-md p-1 focus:outline-none hover:bg-zinc-100 transition-colors">
-              <ChevronDown size={18} className="text-zinc-600" />
-            </DropdownMenuTrigger>
+        </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-              side="top"
-              align="end"
-              alignOffset={-10}
-              sideOffset={12}
-              className="w-[250px] rounded-[10px] border border-[#CCCCCC] shadow-lg bg-[#F0F4F8]"
-            >
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="flex items-center gap-4 p-3 text-xs font-medium !text-[#EF4444] cursor-pointer"
-              >
-                <LogOut size={20} strokeWidth={2} className="!text-[#EF4444]" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
+        <DropdownMenuContent
+          side="top"
+          align="center"
+          sideOffset={8}
+          className="w-[240px] rounded-[10px] border-none shadow-lg bg-[var(--color-gray-100)]"
+        >
+          <DropdownMenuItem
+            onClick={handleLogout}
+            className="group flex items-center gap-4 p-3 text-xs font-medium !text-[#EF4444] hover:!text-[#EF4444] cursor-pointer"
+          >
+            <LogOut
+              size={20}
+              strokeWidth={2}
+              stroke="#EF4444"
+              className="!text-[#EF4444] group-hover:!text-[#EF4444]"
+              style={{ color: "#EF4444" }}
+            />
+            <span style={{ color: "#EF4444" }}>Logout</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </>
   );
 }

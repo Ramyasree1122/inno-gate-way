@@ -167,7 +167,7 @@ export default function ChatFooterComponent() {
               align="end"
               alignOffset={-10}
               sideOffset={12}
-              className="w-[250px] rounded-[10px] border border-[#CCCCCC] shadow-lg bg-[#F0F4F8]"
+              className="w-[250px] rounded-[10px] border-none shadow-lg bg-[var(--color-gray-100)]"
             >
               <DropdownMenuItem
                 onClick={() => setIsModalOpen(true)}
@@ -183,10 +183,16 @@ export default function ChatFooterComponent() {
 
               <DropdownMenuItem
                 onClick={() => authService.logoutUser()}
-                className="mt-1 flex items-center gap-4 p-3 text-xs font-medium !text-[#EF4444] cursor-pointer"
+                className="group mt-1 flex items-center gap-4 p-3 text-xs font-medium !text-[#EF4444] hover:!text-[#EF4444] cursor-pointer"
               >
-                <LogOut size={20} strokeWidth={2} className="!text-[#EF4444]" />
-                Logout
+                <LogOut
+                  size={20}
+                  strokeWidth={2}
+                  stroke="#EF4444"
+                  className="!text-[#EF4444] group-hover:!text-[#EF4444]"
+                  style={{ color: "#EF4444" }}
+                />
+                <span style={{ color: "#EF4444" }}>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -196,7 +202,7 @@ export default function ChatFooterComponent() {
       {/* Gateway API Key Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div className="w-[400px] rounded-xl bg-white p-6 shadow-2xl relative flex flex-col">
+          <div className="w-[400px] rounded-xl bg-[var(--color-gray-100)] p-6 shadow-2xl relative flex flex-col">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute right-4 top-4 text-neutral-600 hover:text-black transition-colors"

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import SvgIcon from "@/components/svgIcons";
 import { useAuth } from "@/components/providers/AuthProvider";
 import DashboardFooterComponent from "./components/DashboardFooterComponent";
 import { usePathname } from "next/navigation";
@@ -18,42 +19,48 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside className="w-64 bg-white flex flex-col shadow-[0_0_15px_rgba(0,0,0,0.05)] border-r border-zinc-200">
         <div className="h-16 flex items-center px-6 border-b border-zinc-100">
-          <span className="text-base font-semibold pl-2 text-zinc-800">
-            InnoAIGateway Admin
-          </span>
+          <div className="inline-flex items-center gap-2">
+            <SvgIcon type="radium-ai-icon" width={20} height={24} />
+            <span className="text-base font-semibold text-zinc-800">
+              InnoAIGateway Admin
+            </span>
+          </div>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           <Link
             href="/dashboard"
-            className={`flex items-center px-3 py-2.5 rounded-md font-medium transition-colors ${
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md font-medium transition-colors ${
               pathname === "/dashboard"
-                ? "bg-[#F9F5FF] text-[var(--color-brand-purple)]"
+                ? "bg-[#F9F5FF] text-[var(--color-purple-600)]"
                 : "text-zinc-600 hover:bg-zinc-50"
             }`}
           >
+            <SvgIcon type="sidebar-dashboard-icon" width={20} height={20} />
             Dashboard
           </Link>
 
           <Link
             href="/keymanagement"
-            className={`flex items-center px-3 py-2.5 rounded-md font-medium transition-colors ${
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md font-medium transition-colors ${
               pathname === "/keymanagement"
-                ? "bg-[#F9F5FF] text-[var(--color-brand-purple)]"
+                ? "bg-[#F9F5FF] text-[var(--color-purple-600)]"
                 : "text-zinc-600 hover:bg-zinc-50"
             }`}
           >
+            <SvgIcon type="sidebar-key-icon" width={20} height={20} />
             Key Management
           </Link>
 
           <Link
             href="/dashboard/history"
-            className={`flex items-center px-3 py-2.5 rounded-md font-medium transition-colors ${
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md font-medium transition-colors ${
               pathname === "/dashboard/history"
-                ? "bg-[#F9F5FF] text-[var(--color-brand-purple)]"
+                ? "bg-[#F9F5FF] text-[var(--color-purple-600)]"
                 : "text-zinc-600 hover:bg-zinc-50"
             }`}
           >
+            <SvgIcon type="sidebar-history-icon" width={20} height={20} />
             History
           </Link>
         </nav>

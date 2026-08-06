@@ -13,11 +13,13 @@ import {
 export default function TopTokenConsumers() {
   const [data, setData] = useState<TopUserResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState("all");
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await dashboardService.getTopUsers("all");
+        const response = await dashboardService.getTopUsers(selectedPeriod);
         setData(response);
       } catch (error) {
         console.error("Failed to fetch top users", error);
@@ -26,7 +28,7 @@ export default function TopTokenConsumers() {
       }
     };
     fetchData();
-  }, []);
+  }, [selectedPeriod]);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6 h-full flex flex-col">
@@ -34,15 +36,22 @@ export default function TopTokenConsumers() {
         <h2 className="text-lg font-semibold text-neutral-900">Top Token Consumers</h2>
         
         <div className="w-[150px] shrink-0">
-          <Select defaultValue="Last 24 hours">
+          <Select value={selectedPeriod} onValueChange={(value) => setSelectedPeriod(value || "all")}>
             <SelectTrigger className="w-full h-8 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md">
-              <SelectValue placeholder="Select range" />
+              {/* show mapped label text inside trigger so the displayed text matches dropdown option */}
+              <span className="truncate">
+                {selectedPeriod === "all" && "All Time"}
+                {selectedPeriod === "24h" && "Last 24 Hours"}
+                {selectedPeriod === "week" && "Last Week"}
+                {selectedPeriod === "month" && "Last Month"}
+                {!selectedPeriod && "Select range"}
+              </span>
             </SelectTrigger>
             <SelectContent align="end" alignItemWithTrigger={false}>
-              <SelectItem value="Last 24 hours" className="text-xs">Last 24 hours</SelectItem>
-              <SelectItem value="Last 7 days" className="text-xs">Last 7 days</SelectItem>
-              <SelectItem value="Last 30 days" className="text-xs">Last 30 days</SelectItem>
-              <SelectItem value="All time" className="text-xs">All time</SelectItem>
+              <SelectItem value="all" className="text-xs">All Time</SelectItem>
+              <SelectItem value="24h" className="text-xs">Last 24 Hours</SelectItem>
+              <SelectItem value="week" className="text-xs">Last Week</SelectItem>
+              <SelectItem value="month" className="text-xs">Last Month</SelectItem>
             </SelectContent>
           </Select>
         </div>
