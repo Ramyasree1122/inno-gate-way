@@ -28,6 +28,13 @@ export interface TopUserResponse {
   total_tokens: number;
 }
 
+export interface TokensByModelResponse {
+  model: string;
+  requests: number;
+  total_tokens: number;
+  avg_latency_ms: number;
+}
+
 export const dashboardService = {
   getDashboardSummary: async (): Promise<DashboardSummaryResponse> => {
     return get<DashboardSummaryResponse>(API_ENDPOINTS.DASHBOARD_SUMMARY);
@@ -37,5 +44,11 @@ export const dashboardService = {
   },
   getTopUsers: async (period: string = "all"): Promise<TopUserResponse[]> => {
     return get<TopUserResponse[]>(`${API_ENDPOINTS.DASHBOARD_TOP_USERS}?period=${period}`);
+  },
+  getTokensByModel: async (): Promise<TokensByModelResponse[]> => {
+    return get<TokensByModelResponse[]>(API_ENDPOINTS.DASHBOARD_TOKENS_BY_MODEL);
+  },
+  getProviders: async (): Promise<any[]> => {
+    return get<any[]>(API_ENDPOINTS.AUTH.PROVIDERS);
   },
 };

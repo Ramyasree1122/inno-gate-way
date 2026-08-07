@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
   DASHBOARD_SUMMARY: "/api/analytics/summary",
   DASHBOARD_DAILY: "/api/analytics/daily",
   DASHBOARD_TOP_USERS: "/api/analytics/top-users",
+  DASHBOARD_TOKENS_BY_MODEL: "/api/analytics/tokens-by-model",
   GET_WORKSPACES: "/api/workspaces",
   GET_API_KEYS: "/api/api-keys",
   EXTEND_API_KEY_DURATION: (apiKeyId: string) =>

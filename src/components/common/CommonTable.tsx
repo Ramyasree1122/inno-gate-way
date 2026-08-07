@@ -151,4 +151,4 @@ export function CommonTable<T>({
     </div>
   );
 }
-
+
