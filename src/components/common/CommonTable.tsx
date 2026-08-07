@@ -129,7 +129,7 @@ export function CommonTable<T>({
                             key={actionIdx}
                             onClick={() => action.onClick(row)}
                             className={cn(
-                              "cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 data-[focus]:bg-neutral-100 rounded-md transition-colors flex items-center gap-2",
+                              "cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors flex items-center gap-2",
                               action.className,
                             )}
                           >
