@@ -41,7 +41,7 @@ interface CommonTableProps<T> {
   emptyMessage?: string;
   rowKey?: keyof T | ((row: T, index: number) => React.Key);
   className?: string;
-  actions?: TableAction<T>[];
+  actions?: (row: T) => TableAction<T>[];
   headerClassName?: string;
   bodyClassName?: string;
 }
@@ -70,10 +70,12 @@ export function CommonTable<T>({
   headerClassName,
   bodyClassName,
 }: CommonTableProps<T>) {
-  const hasActions = Boolean(actions && actions.length > 0);
+  const hasActions = Boolean(actions);
 
   return (
-    <div className={`rounded-lg border bg-white w-full overflow-x-auto ${className ?? ""}`}>
+    <div
+      className={`rounded-lg border bg-white w-full overflow-x-auto ${className ?? ""}`}
+    >
       <Table>
         <TableHeader>
           <TableRow>
@@ -97,8 +99,8 @@ export function CommonTable<T>({
                   typeof rowKey === "function"
                     ? rowKey(row, index)
                     : rowKey
-                    ? String(row[rowKey])
-                    : index
+                      ? String(row[rowKey])
+                      : index
                 }
               >
                 {columns.map((column) => (
@@ -111,20 +113,23 @@ export function CommonTable<T>({
                       : formatDate(row[column.key as keyof T] ?? "")}
                   </TableCell>
                 ))}
-                {hasActions && (
+                {hasActions && actions && (
                   <TableCell className="w-[50px] text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-neutral-100 transition-colors cursor-pointer outline-none border-none">
                         <MoreVertical className="h-4 w-4 text-neutral-500" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[120px] bg-white border border-neutral-200 shadow-lg rounded-md p-1">
-                        {actions?.map((action, actionIdx) => (
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-[160px] bg-white border border-neutral-200 shadow-lg rounded-md p-1"
+                      >
+                        {actions(row).map((action, actionIdx) => (
                           <DropdownMenuItem
                             key={actionIdx}
                             onClick={() => action.onClick(row)}
                             className={cn(
                               "cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors flex items-center gap-2",
-                              action.className
+                              action.className,
                             )}
                           >
                             {action.label}
