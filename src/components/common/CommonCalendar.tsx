@@ -6,8 +6,9 @@ import dayjs from "dayjs";
 import { cn } from "@/lib/utils";
 
 export interface CommonCalendarProps {
-  value?: string | Date;
-  onChange?: (date: Date) => void;
+  range?: boolean;
+  value?: string | Date | [string | Date | null, string | Date | null] | null;
+  onChange?: (val: any) => void;
   placeholder?: string;
   label?: string;
   minDate?: Date;
@@ -19,12 +20,21 @@ export interface CommonCalendarProps {
 
 const WEEK_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-function normalizeDate(value?: string | Date) {
+function normalizeDate(value?: any) {
+  if (Array.isArray(value)) return null;
   if (!value) return null;
   return dayjs(value).isValid() ? dayjs(value).startOf("day") : null;
 }
 
+function normalizeRange(value?: any): [dayjs.Dayjs | null, dayjs.Dayjs | null] {
+  if (!Array.isArray(value)) return [null, null];
+  const start = value[0] && dayjs(value[0]).isValid() ? dayjs(value[0]).startOf("day") : null;
+  const end = value[1] && dayjs(value[1]).isValid() ? dayjs(value[1]).startOf("day") : null;
+  return [start, end];
+}
+
 export function CommonCalendar({
+  range,
   value,
   onChange,
   placeholder = "Select date",
@@ -37,16 +47,24 @@ export function CommonCalendar({
 }: CommonCalendarProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState<dayjs.Dayjs | null>(normalizeDate(value));
-  const [currentMonth, setCurrentMonth] = React.useState<dayjs.Dayjs>(selectedDate ?? dayjs().startOf("month"));
+  const [selectedRange, setSelectedRange] = React.useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>(normalizeRange(value));
+  const [hoverDate, setHoverDate] = React.useState<dayjs.Dayjs | null>(null);
+  
+  const initialMonth = range ? (selectedRange[0] ?? dayjs().startOf("month")) : (selectedDate ?? dayjs().startOf("month"));
+  const [currentMonth, setCurrentMonth] = React.useState<dayjs.Dayjs>(initialMonth);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
-    const parsed = normalizeDate(value);
-    setSelectedDate(parsed);
-    if (parsed) {
-      setCurrentMonth(parsed.startOf("month"));
+    if (range) {
+      const parsed = normalizeRange(value);
+      setSelectedRange(parsed);
+      if (parsed[0]) setCurrentMonth(parsed[0].startOf("month"));
+    } else {
+      const parsed = normalizeDate(value);
+      setSelectedDate(parsed);
+      if (parsed) setCurrentMonth(parsed.startOf("month"));
     }
-  }, [value]);
+  }, [value, range]);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -62,7 +80,15 @@ export function CommonCalendar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedLabel = selectedDate
+  const formatRange = (start: dayjs.Dayjs | null, end: dayjs.Dayjs | null) => {
+    if (start && end) return `${start.format("MMM D, YYYY")} - ${end.format("MMM D, YYYY")}`;
+    if (start) return `${start.format("MMM D, YYYY")} -`;
+    return "";
+  };
+
+  const selectedLabel = range
+    ? formatRange(selectedRange[0], selectedRange[1])
+    : selectedDate
     ? selectedDate.format("MMM D, YYYY")
     : "";
 
@@ -97,9 +123,27 @@ export function CommonCalendar({
     ) {
       return;
     }
-    setSelectedDate(date);
-    onChange?.(date.toDate());
-    setIsOpen(false);
+    
+    if (range) {
+      if (!selectedRange[0] || (selectedRange[0] && selectedRange[1])) {
+        setSelectedRange([date, null]);
+        onChange?.([date.toDate(), null]);
+      } else {
+        if (date.isBefore(selectedRange[0])) {
+          setSelectedRange([date, null]);
+          onChange?.([date.toDate(), null]);
+        } else {
+          setSelectedRange([selectedRange[0], date]);
+          onChange?.([selectedRange[0].toDate(), date.toDate()]);
+          setIsOpen(false);
+          setHoverDate(null);
+        }
+      }
+    } else {
+      setSelectedDate(date);
+      onChange?.(date.toDate());
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -165,20 +209,34 @@ export function CommonCalendar({
 
           <div className="mt-3 grid grid-cols-7 gap-2 text-center">
             {monthDays.map(({ date, disabled }) => {
-              const isSelected = !!selectedDate && date.isSame(selectedDate, "day");
+              const isSelected = !range && !!selectedDate && date.isSame(selectedDate, "day");
               const isCurrentMonth = date.month() === currentMonth.month();
+              
+              const isRangeStart = range && !!selectedRange[0] && date.isSame(selectedRange[0], "day");
+              const isRangeEnd = range && !!selectedRange[1] && date.isSame(selectedRange[1], "day");
+              const isRangeSelected = isRangeStart || isRangeEnd;
+              
+              const isBetween = range && !!selectedRange[0] && (
+                (!!selectedRange[1] && date.isAfter(selectedRange[0]) && date.isBefore(selectedRange[1])) ||
+                (!selectedRange[1] && hoverDate && date.isAfter(selectedRange[0]) && date.isBefore(hoverDate))
+              );
+
               return (
                 <button
                   key={date.toString()}
                   type="button"
                   disabled={disabled}
                   onClick={() => handleDaySelect(date)}
+                  onMouseEnter={() => {
+                    if (range && selectedRange[0] && !selectedRange[1]) setHoverDate(date);
+                  }}
                   className={cn(
                     "inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition",
                     disabled && "cursor-not-allowed opacity-40",
-                    isSelected && "bg-purple-600 text-white shadow-sm",
-                    !isSelected && !disabled && isCurrentMonth && "text-neutral-900 hover:bg-neutral-100",
-                    !isSelected && !disabled && !isCurrentMonth && "text-neutral-400",
+                    (isSelected || isRangeSelected) && "bg-purple-600 text-white shadow-sm",
+                    isBetween && "bg-purple-100 text-purple-900",
+                    !(isSelected || isRangeSelected || isBetween) && !disabled && isCurrentMonth && "text-neutral-900 hover:bg-neutral-100",
+                    !(isSelected || isRangeSelected || isBetween) && !disabled && !isCurrentMonth && "text-neutral-400",
                   )}
                 >
                   {date.date()}
