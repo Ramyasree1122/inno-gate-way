@@ -72,7 +72,10 @@ export default function LatestAPIKeys() {
       </h3>
       <div className="flex justify-between items-center w-full mb-6">
         <div className="w-[320px]">
-          <SearchInput placeholder="Search workspaces, users and keys..." className="bg-[#FAFAFA]" />
+          <SearchInput
+            placeholder="Search workspaces, users and keys..."
+            className="bg-[#FAFAFA]"
+          />
         </div>
         <button className="bg-[var(--color-gray-100)] text-[var(--color-brand-purple)] text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer hover:bg-[var(--color-gray-d2)] border-none outline-none">
           Create New Key
@@ -82,7 +85,11 @@ export default function LatestAPIKeys() {
       <CommonTable
         data={apiKeys}
         columns={[
-          { key: "workspace_name", title: "Workspace", className: "font-medium text-zinc-900" },
+          {
+            key: "workspace_name",
+            title: "Workspace",
+            className: "font-medium text-zinc-900",
+          },
           { key: "owner", title: "User Name" },
           { key: "provider", title: "Provider" },
           {
@@ -121,12 +128,19 @@ export default function LatestAPIKeys() {
           },
           { key: "created_at", title: "Created" },
         ]}
-        onEdit={handleEditApiKey}
-        onDelete={handleDeleteApiKey}
+        actions={(row) => [
+          {
+            label: "Edit",
+            onClick: () => handleEditApiKey(row),
+          },
+          {
+            label: "Delete",
+            onClick: () => handleDeleteApiKey(row),
+          },
+        ]}
         headerClassName="text-[#737373] text-sm font-medium"
         bodyClassName="text-sm text-[#525252] font-normal py-4"
       />
-      
     </div>
   );
 }

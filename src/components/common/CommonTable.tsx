@@ -29,8 +29,8 @@ export type TableColumn<T> = {
   render?: (row: T) => React.ReactNode;
 };
 
-export type ActionMenuItem<T> = {
-  label: string | React.ReactNode;
+export type TableAction<T> = {
+  label: React.ReactNode;
   onClick: (row: T) => void;
   className?: string;
 };
@@ -41,9 +41,9 @@ interface CommonTableProps<T> {
   emptyMessage?: string;
   rowKey?: keyof T | ((row: T, index: number) => React.Key);
   className?: string;
+  actions?: (row: T) => TableAction<T>[];
   headerClassName?: string;
   bodyClassName?: string;
-  actionMenuItems?: (row: T) => ActionMenuItem<T>[];
 }
 
 export function formatDate(value: unknown): string {
@@ -66,14 +66,16 @@ export function CommonTable<T>({
   emptyMessage = "No records found.",
   rowKey,
   className,
+  actions,
   headerClassName,
   bodyClassName,
-  actionMenuItems,
 }: CommonTableProps<T>) {
-  const hasActions = Boolean(actionMenuItems);
+  const hasActions = Boolean(actions);
 
   return (
-    <div className={`rounded-lg border bg-white w-full overflow-x-auto ${className ?? ""}`}>
+    <div
+      className={`rounded-lg border bg-white w-full overflow-x-auto ${className ?? ""}`}
+    >
       <Table>
         <TableHeader>
           <TableRow>
@@ -97,8 +99,8 @@ export function CommonTable<T>({
                   typeof rowKey === "function"
                     ? rowKey(row, index)
                     : rowKey
-                    ? String(row[rowKey])
-                    : index
+                      ? String(row[rowKey])
+                      : index
                 }
               >
                 {columns.map((column) => (
@@ -111,23 +113,26 @@ export function CommonTable<T>({
                       : formatDate(row[column.key as keyof T] ?? "")}
                   </TableCell>
                 ))}
-                {hasActions && actionMenuItems && (
+                {hasActions && actions && (
                   <TableCell className="w-[50px] text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-neutral-100 transition-colors cursor-pointer outline-none border-none">
                         <MoreVertical className="h-4 w-4 text-neutral-500" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[160px] bg-white border border-neutral-200 shadow-lg rounded-md p-1 z-50">
-                        {actionMenuItems(row).map((item, itemIdx) => (
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-[160px] bg-white border border-neutral-200 shadow-lg rounded-md p-1"
+                      >
+                        {actions(row).map((action, actionIdx) => (
                           <DropdownMenuItem
-                            key={itemIdx}
-                            onClick={() => item.onClick(row)}
+                            key={actionIdx}
+                            onClick={() => action.onClick(row)}
                             className={cn(
-                              "cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:!bg-neutral-100 data-[focus]:!bg-neutral-100 rounded-md transition-colors flex items-center gap-2",
-                              item.className
+                              "cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors flex items-center gap-2",
+                              action.className,
                             )}
                           >
-                            {item.label}
+                            {action.label}
                           </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>
@@ -151,4 +156,3 @@ export function CommonTable<T>({
     </div>
   );
 }
-

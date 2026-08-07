@@ -39,17 +39,30 @@ export interface ApiKey {
   expires_at: string | null;
 }
 
-const CopyButton = ({ text }: { text: string }) => {
+const CopyButton = ({
+  text,
+  disabled,
+}: {
+  text: string;
+  disabled?: boolean;
+}) => {
   const [copied, setCopied] = React.useState(false);
   const handleCopy = () => {
+    if (disabled) return;
+
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
   return (
     <button
+      disabled={disabled}
       onClick={handleCopy}
-      className="p-1 hover:bg-neutral-100 rounded transition-colors cursor-pointer text-neutral-400 hover:text-neutral-900 inline-flex items-center justify-center border-none outline-none shrink-0"
+      className={`p-1 rounded transition-colors inline-flex items-center justify-center border-none outline-none shrink-0 ${
+        disabled
+          ? "cursor-not-allowed text-neutral-300 opacity-50"
+          : "cursor-pointer text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900"
+      }`}
       title="Copy key prefix"
     >
       {copied ? (
@@ -160,13 +173,22 @@ export default function KeyManagementPage() {
     try {
       let success = false;
       if (activeApiKey.mode === "change_workspace") {
-        success = await keymanagementService.changeWorkspace(activeApiKey.id, selectedWorkspaceId);
+        success = await keymanagementService.changeWorkspace(
+          activeApiKey.id,
+          selectedWorkspaceId,
+        );
       } else if (activeApiKey.mode === "extend") {
-        success = await keymanagementService.extendKeyDuration(activeApiKey.id, 30);
+        success = await keymanagementService.extendKeyDuration(
+          activeApiKey.id,
+          30,
+        );
       } else if (activeApiKey.mode === "regenerate") {
         success = await keymanagementService.regenerateKey(activeApiKey.id);
       } else if (activeApiKey.mode === "disable") {
-        success = await keymanagementService.disableKey(activeApiKey.id, !activeApiKey.is_active);
+        success = await keymanagementService.disableKey(
+          activeApiKey.id,
+          !activeApiKey.is_active,
+        );
       } else if (activeApiKey.mode === "delete") {
         success = await keymanagementService.deleteKey(activeApiKey.id);
       }
@@ -175,7 +197,10 @@ export default function KeyManagementPage() {
         await fetchApiKeys();
       }
     } catch (error) {
-      console.error(`Error executing API key action ${activeApiKey.mode}:`, error);
+      console.error(
+        `Error executing API key action ${activeApiKey.mode}:`,
+        error,
+      );
     }
     setApiKeyModalOpen(false);
     setActiveApiKey(null);
@@ -565,7 +590,7 @@ export default function KeyManagementPage() {
             { key: "created_by", title: "Created by" },
             { key: "created_at", title: "Created on" },
           ]}
-          actionMenuItems={(row) => [
+          actions={(row) => [
             {
               label: "Edit",
               onClick: () => handleEditWorkspace(row),
@@ -573,8 +598,6 @@ export default function KeyManagementPage() {
             {
               label: "Delete",
               onClick: () => handleDeleteWorkspace(row),
-              className:
-                "text-red-600 hover:!bg-red-50 data-[focus]:!bg-red-55",
             },
           ]}
           headerClassName="text-[#737373] text-sm font-medium"
@@ -618,7 +641,7 @@ export default function KeyManagementPage() {
                   >
                     {row.key_prefix}
                   </span>
-                  <CopyButton text={row.key_prefix} />
+                  <CopyButton text={row.key_prefix} disabled={!row?.is_active} />
                 </div>
               ),
             },
@@ -648,18 +671,21 @@ export default function KeyManagementPage() {
               render: (row) => formatExpiresOn(row.expires_at),
             },
           ]}
-          actionMenuItems={(row) => [
+          actions={(row) => [
             {
               label: "Change Workspace",
               onClick: () => handleChangeWorkspace(row),
+              className: !row.is_active ? "text-[#BDBDBD] cursor-not-allowed" : undefined,
             },
             {
               label: "Extend Duration",
               onClick: () => handleExtendDuration(row),
+              className: !row.is_active ? "text-[#BDBDBD] cursor-not-allowed" : undefined,
             },
             {
               label: "Regenerate Key",
               onClick: () => handleRegenerateKey(row),
+              className: !row.is_active ? "text-[#BDBDBD] cursor-not-allowed" : undefined,
             },
             {
               label: row.is_active ? "Disable Key" : "Enable Key",
@@ -668,8 +694,6 @@ export default function KeyManagementPage() {
             {
               label: "Delete",
               onClick: () => handleDeleteApiKey(row),
-              className:
-                "text-red-600 hover:!bg-red-50 data-[focus]:!bg-red-55",
             },
           ]}
           headerClassName="text-[#737373] text-sm font-medium"
