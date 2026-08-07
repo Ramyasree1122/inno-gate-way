@@ -18,10 +18,10 @@ export const API_ENDPOINTS = {
   DASHBOARD_TOP_USERS: "/api/analytics/top-users",
   GET_WORKSPACES: "/api/workspaces",
   GET_API_KEYS: "/api/api-keys",
-  CHANGE_WORKSPACE: (workspaceId: string) => `/api/workspaces/${workspaceId}`,
   EXTEND_API_KEY_DURATION: (apiKeyId: string) =>
     `/api/api-keys/${apiKeyId}/extend`,
   REGENERATE_API_KEY: (apiKeyId: string) =>
     `/api/api-keys/${apiKeyId}/regenerate`,
-  DISABLE_API_KEY: (apiKeyId: string) => `/api/api-keys/${apiKeyId}`,
+  CHANGE_DISABLE_DELETE_API_KEY: (apiKeyId: string) =>
+    `/api/api-keys/${apiKeyId}`,
 };

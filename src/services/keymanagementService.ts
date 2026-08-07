@@ -59,7 +59,7 @@ export const keymanagementService = {
   changeWorkspace: async (apiKeyId: string, workspaceId: string) => {
     try {
       const response = await axiosInstance.patch(
-        API_ENDPOINTS.DISABLE_API_KEY(apiKeyId),
+        API_ENDPOINTS.CHANGE_DISABLE_DELETE_API_KEY(apiKeyId),
         { workspace_id: workspaceId },
       );
       return response.status >= 200 && response.status < 300;
@@ -94,7 +94,7 @@ export const keymanagementService = {
   disableKey: async (apiKeyId: string, isActive: boolean) => {
     try {
       const response = await axiosInstance.patch(
-        API_ENDPOINTS.DISABLE_API_KEY(apiKeyId),
+        API_ENDPOINTS.CHANGE_DISABLE_DELETE_API_KEY(apiKeyId),
         { is_active: isActive }
       );
       return response.status >= 200 && response.status < 300;
@@ -106,7 +106,7 @@ export const keymanagementService = {
   deleteKey: async (apiKeyId: string) => {
     try {
       const response = await axiosInstance.delete(
-        API_ENDPOINTS.DISABLE_API_KEY(apiKeyId)
+        API_ENDPOINTS.CHANGE_DISABLE_DELETE_API_KEY(apiKeyId),
       );
       return response.status >= 200 && response.status < 300;
     } catch (error) {

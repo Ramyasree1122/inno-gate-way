@@ -565,8 +565,18 @@ export default function KeyManagementPage() {
             { key: "created_by", title: "Created by" },
             { key: "created_at", title: "Created on" },
           ]}
-          onEdit={handleEditWorkspace}
-          onDelete={handleDeleteWorkspace}
+          actionMenuItems={(row) => [
+            {
+              label: "Edit",
+              onClick: () => handleEditWorkspace(row),
+            },
+            {
+              label: "Delete",
+              onClick: () => handleDeleteWorkspace(row),
+              className:
+                "text-red-600 hover:!bg-red-50 data-[focus]:!bg-red-55",
+            },
+          ]}
           headerClassName="text-[#737373] text-sm font-medium"
           bodyClassName="text-sm text-[#0A0A0A] font-normal "
           className="border-[#D4D4D4] rounded-md shadow-xs"
@@ -638,11 +648,30 @@ export default function KeyManagementPage() {
               render: (row) => formatExpiresOn(row.expires_at),
             },
           ]}
-          onChangeWorkspace={handleChangeWorkspace}
-          onExtendDuration={handleExtendDuration}
-          onRegenerateKey={handleRegenerateKey}
-          onDisableKey={handleDisableApiKey}
-          onDelete={handleDeleteApiKey}
+          actionMenuItems={(row) => [
+            {
+              label: "Change Workspace",
+              onClick: () => handleChangeWorkspace(row),
+            },
+            {
+              label: "Extend Duration",
+              onClick: () => handleExtendDuration(row),
+            },
+            {
+              label: "Regenerate Key",
+              onClick: () => handleRegenerateKey(row),
+            },
+            {
+              label: row.is_active ? "Disable Key" : "Enable Key",
+              onClick: () => handleDisableApiKey(row),
+            },
+            {
+              label: "Delete",
+              onClick: () => handleDeleteApiKey(row),
+              className:
+                "text-red-600 hover:!bg-red-50 data-[focus]:!bg-red-55",
+            },
+          ]}
           headerClassName="text-[#737373] text-sm font-medium"
           bodyClassName="text-sm text-[#0A0A0A] font-normal"
           className="border-[#D4D4D4] rounded-md shadow-xs"
