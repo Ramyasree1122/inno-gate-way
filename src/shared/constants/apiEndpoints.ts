@@ -24,5 +24,4 @@ export const API_ENDPOINTS = {
   REGENERATE_API_KEY: (apiKeyId: string) =>
     `/api/api-keys/${apiKeyId}/regenerate`,
   DISABLE_API_KEY: (apiKeyId: string) => `/api/api-keys/${apiKeyId}`,
-  DELETE_API_KEY: (apiKeyId: string) => `/api/api-keys/${apiKeyId}`,
 };
