@@ -29,14 +29,19 @@ export type TableColumn<T> = {
   render?: (row: T) => React.ReactNode;
 };
 
+export type TableAction<T> = {
+  label: React.ReactNode;
+  onClick: (row: T) => void;
+  className?: string;
+};
+
 interface CommonTableProps<T> {
   columns: TableColumn<T>[];
   data: T[];
   emptyMessage?: string;
   rowKey?: keyof T | ((row: T, index: number) => React.Key);
   className?: string;
-  onEdit?: (row: T) => void;
-  onDelete?: (row: T) => void;
+  actions?: TableAction<T>[];
   headerClassName?: string;
   bodyClassName?: string;
 }
@@ -61,12 +66,11 @@ export function CommonTable<T>({
   emptyMessage = "No records found.",
   rowKey,
   className,
-  onEdit,
-  onDelete,
+  actions,
   headerClassName,
   bodyClassName,
 }: CommonTableProps<T>) {
-  const hasActions = Boolean(onEdit || onDelete);
+  const hasActions = Boolean(actions && actions.length > 0);
 
   return (
     <div className={`rounded-lg border bg-white w-full overflow-x-auto ${className ?? ""}`}>
@@ -114,22 +118,18 @@ export function CommonTable<T>({
                         <MoreVertical className="h-4 w-4 text-neutral-500" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-[120px] bg-white border border-neutral-200 shadow-lg rounded-md p-1">
-                        {onEdit && (
+                        {actions?.map((action, actionIdx) => (
                           <DropdownMenuItem
-                            onClick={() => onEdit(row)}
-                            className="cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors flex items-center gap-2"
+                            key={actionIdx}
+                            onClick={() => action.onClick(row)}
+                            className={cn(
+                              "cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors flex items-center gap-2",
+                              action.className
+                            )}
                           >
-                            Edit
+                            {action.label}
                           </DropdownMenuItem>
-                        )}
-                        {onDelete && (
-                          <DropdownMenuItem
-                            onClick={() => onDelete(row)}
-                            className="cursor-pointer px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors flex items-center gap-2"
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        )}
+                        ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
