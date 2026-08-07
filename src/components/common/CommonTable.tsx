@@ -50,7 +50,8 @@ export function formatDate(value: unknown): string {
   if (value === null || value === undefined) return "";
   const dateStr = String(value);
   // Match typical date formats: ISO format 2026-08-05T06:34:29Z or YYYY-MM-DD
-  const dateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+  const dateRegex =
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
   if (dateRegex.test(dateStr)) {
     const d = dayjs(dateStr);
     if (d.isValid()) {
@@ -128,7 +129,7 @@ export function CommonTable<T>({
                             key={actionIdx}
                             onClick={() => action.onClick(row)}
                             className={cn(
-                              "cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors flex items-center gap-2",
+                              "cursor-pointer px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 data-[focus]:bg-neutral-100 rounded-md transition-colors flex items-center gap-2",
                               action.className,
                             )}
                           >
