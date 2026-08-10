@@ -19,6 +19,7 @@ export default function DashboardLayout({
     if (pathname === "/keymanagement") return "Key Management";
     if (pathname === "/dashboard/history") return "History";
     if (pathname === "/dashboard") return "Dashboard";
+    if (pathname === "/admin-users") return "Admin Users";
     return "";
   };
 
