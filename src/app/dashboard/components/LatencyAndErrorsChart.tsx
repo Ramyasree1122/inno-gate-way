@@ -78,7 +78,7 @@ export default function LatencyAndErrorsChart() {
     );
   }
 
-  if (!data || data.length === 0) return null;
+  const hasData = data && data.length > 0;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6 h-full flex flex-col">
@@ -105,8 +105,9 @@ export default function LatencyAndErrorsChart() {
       </div>
 
       <div className="flex-1 w-full min-h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
+        {hasData ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
             data={data}
             margin={{ top: 8, right: 8, left: 8, bottom: 0 }}
           >
@@ -199,9 +200,14 @@ export default function LatencyAndErrorsChart() {
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 5 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-neutral-500">
+            No data available
+          </div>
+        )}
       </div>
 
     </div>

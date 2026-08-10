@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
   GET_CHAT_SESSIONS: "/api/chat/sessions",
   CREATE_CHAT_SESSION: "/api/chat/sessions",
   GET_USER_INFO: "/api/gateway-keys/me",
+  ADMIN_USERS: "/api/users",
   GET_CHAT_BY_ID: "/api/chat/sessions/{id}",
   CHAT_COMPLETIONS: "/api/v1/chat/completions",
   DASHBOARD_SUMMARY: "/api/analytics/summary",

@@ -19,6 +19,7 @@ export default function DashboardLayout({
     if (pathname === "/keymanagement") return "Key Management";
     if (pathname === "/dashboard/history") return "History";
     if (pathname === "/dashboard") return "Dashboard";
+    if (pathname === "/admin-users") return "Admin Users";
     return "";
   };
 
@@ -70,6 +71,17 @@ export default function DashboardLayout({
           >
             <SvgIcon type="sidebar-history-icon" width={20} height={20} />
             History
+          </Link>
+           <Link
+            href="/admin-users"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-md font-medium transition-colors ${
+              pathname === "/admin-users"
+                ? "bg-[#F9F5FF] text-[var(--color-purple-600)]"
+                : "text-zinc-600 hover:bg-zinc-50"
+            }`}
+          >
+            <SvgIcon type="sidebar-AdminUsers-icon" width={20} height={20} />
+            Admin Users
           </Link>
         </nav>
 

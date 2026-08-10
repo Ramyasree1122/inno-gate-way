@@ -10,10 +10,6 @@ export default function KeyManagementPage() {
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* <h1 className="text-2xl font-semibold text-zinc-950 mb-4">
-        Key Management
-      </h1> */}
-
       <div className="flex border-b border-neutral-300 mb-4">
         <button
           onClick={() => setActiveTab("workspaces")}
