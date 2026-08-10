@@ -14,6 +14,14 @@ export default function DashboardLayout({
 }) {
   const { logout } = useAuth();
   const pathname = usePathname();
+
+  const getHeaderTitle = () => {
+    if (pathname === "/keymanagement") return "Key Management";
+    if (pathname === "/dashboard/history") return "History";
+    if (pathname === "/dashboard") return "Dashboard";
+    return "";
+  };
+
   return (
     <div className="min-h-screen flex bg-zinc-50 overflow-hidden text-sm">
       {/* Sidebar */}
@@ -32,7 +40,7 @@ export default function DashboardLayout({
             href="/dashboard"
             className={`flex items-center gap-3 px-3 py-2.5 rounded-md font-medium transition-colors ${
               pathname === "/dashboard"
-                ? "bg-[#F9F5FF] text-[var(--color-purple-600)]"
+                ? "bg-violet-50 text-[var(--color-purple-600)]"
                 : "text-zinc-600 hover:bg-zinc-50"
             }`}
           >
@@ -44,7 +52,7 @@ export default function DashboardLayout({
             href="/keymanagement"
             className={`flex items-center gap-3 px-3 py-2.5 rounded-md font-medium transition-colors ${
               pathname === "/keymanagement"
-                ? "bg-[#F9F5FF] text-[var(--color-purple-600)]"
+                ? "bg-violet-50 text-[var(--color-purple-600)]"
                 : "text-zinc-600 hover:bg-zinc-50"
             }`}
           >
@@ -56,7 +64,7 @@ export default function DashboardLayout({
             href="/dashboard/history"
             className={`flex items-center gap-3 px-3 py-2.5 rounded-md font-medium transition-colors ${
               pathname === "/dashboard/history"
-                ? "bg-[#F9F5FF] text-[var(--color-purple-600)]"
+                ? "bg-violet-50 text-[var(--color-purple-600)]"
                 : "text-zinc-600 hover:bg-zinc-50"
             }`}
           >
@@ -82,10 +90,14 @@ export default function DashboardLayout({
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#FAFAFA]">
         {/* Top Header */}
-        <header className="h-16 flex items-center justify-between px-8 bg-white border-b border-zinc-100 shrink-0"></header>
+        <header className="h-14 flex items-center justify-between px-3 bg-white border-b border-zinc-100 shrink-0">
+          <h1 className="text-base font-medium text-neutral-950">
+            {getHeaderTitle()}
+          </h1>
+        </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-4">{children}</div>
+        <div className="flex-1 overflow-auto p-3">{children}</div>
       </main>
     </div>
   );

@@ -50,7 +50,8 @@ export function formatDate(value: unknown): string {
   if (value === null || value === undefined) return "";
   const dateStr = String(value);
   // Match typical date formats: ISO format 2026-08-05T06:34:29Z or YYYY-MM-DD
-  const dateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+  const dateRegex =
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
   if (dateRegex.test(dateStr)) {
     const d = dayjs(dateStr);
     if (d.isValid()) {

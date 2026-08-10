@@ -174,7 +174,7 @@ export default function AdminLoginForm() {
             <div className="space-y-2">
               <label
                 htmlFor="email"
-                className="text-sm font-semibold text-[#0A0A0A]"
+                className="text-sm font-semibold text-neutral-950"
               >
                 Email address
               </label>
@@ -198,7 +198,7 @@ export default function AdminLoginForm() {
             <div className="space-y-2">
               <label
                 htmlFor="password"
-                className="text-sm font-semibold text-[#0A0A0A]"
+                className="text-sm font-semibold text-neutral-950"
               >
                 Password
               </label>
@@ -301,7 +301,7 @@ export default function AdminLoginForm() {
             </h3>
 
             {/* Subtitle */}
-            <p className="text-sm text-[#0A0A0A] mb-2 font-normal">
+            <p className="text-sm text-neutral-950 mb-2 font-normal">
               Please enter your email and we&apos;ll send you a secure password
               reset link.
             </p>
@@ -311,7 +311,7 @@ export default function AdminLoginForm() {
               <div className="space-y-2">
                 <label
                   htmlFor="reset-email"
-                  className="text-sm font-medium text-[#0A0A0A]"
+                  className="text-sm font-medium text-neutral-950"
                 >
                   Email address
                 </label>
@@ -359,12 +359,12 @@ export default function AdminLoginForm() {
               Check your inbox
             </h2>
 
-            <p className="text-sm text-center font-normal text-[#0A0A0A] mb-4">
+            <p className="text-sm text-center font-normal text-neutral-950 mb-4">
               We&apos;ve sent the password reset link, please check your inbox.
             </p>
 
             <div className="flex items-center justify-center gap-1 text-xs font-normal mb-4">
-              <span className="text-[#0A0A0A]">Didn&apos;t receive it?</span>
+              <span className="text-neutral-950">Didn&apos;t receive it?</span>
               <button
                 type="button"
                 onClick={() => {
@@ -408,13 +408,13 @@ export default function AdminLoginForm() {
           </h3>
 
           {/* Subtitle */}
-          <p className="text-sm text-[#0A0A0A] mb-4 font-normal">
+          <p className="text-sm text-neutral-950 mb-4 font-normal">
             Your new password must be different from your previous password.
           </p>
 
           {/* Password field */}
           <div className="mb-2">
-            <label className="text-sm font-medium text-[#0A0A0A]">
+            <label className="text-sm font-medium text-neutral-950">
               Password
             </label>
             <div className="relative">
@@ -441,7 +441,7 @@ export default function AdminLoginForm() {
 
           {/* Confirm Password field */}
           <div className="mb-4">
-            <label className="text-sm font-medium text-[#0A0A0A]">
+            <label className="text-sm font-medium text-neutral-950">
               Confirm Password
             </label>
             <div className="relative">
@@ -565,7 +565,7 @@ export default function AdminLoginForm() {
             Password updated
           </h2>
 
-          <p className="text-sm font-normal text-[#0A0A0A] mb-4 align-center">
+          <p className="text-sm font-normal text-neutral-950 mb-4 align-center">
             Your password has been updated successfully.
             <br />
             You can now sign in using your new password.
