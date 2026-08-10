@@ -21,6 +21,7 @@ import {
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CommonCalendar, formatDateRangeDisplay } from "@/components/common/CommonCalendar";
 
 const WEEK_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -87,38 +88,6 @@ export default function TokenConsumptionChart() {
   const [showCustomRange, setShowCustomRange] = useState(false);
   const [rangeStart, setRangeStart] = useState<dayjs.Dayjs | null>(null);
   const [rangeEnd, setRangeEnd] = useState<dayjs.Dayjs | null>(null);
-  const [currentMonth, setCurrentMonth] = useState<dayjs.Dayjs>(dayjs().startOf("month"));
-
-  const daysInMonth = currentMonth.daysInMonth();
-  const startOfMonth = currentMonth.startOf("month");
-  const beginningDay = startOfMonth.day();
-
-  const monthDays = React.useMemo(() => {
-    const days: Array<{ date: dayjs.Dayjs; disabled: boolean }> = [];
-    for (let idx = 0; idx < beginningDay; idx += 1) {
-      days.push({ date: startOfMonth.subtract(beginningDay - idx, "day"), disabled: false });
-    }
-    for (let day = 1; day <= daysInMonth; day += 1) {
-      days.push({ date: startOfMonth.date(day), disabled: false });
-    }
-    const trailing = (7 - (days.length % 7)) % 7;
-    for (let idx = 0; idx < trailing; idx += 1) {
-      days.push({ date: currentMonth.endOf("month").add(idx + 1, "day"), disabled: false });
-    }
-    return days;
-  }, [beginningDay, currentMonth, daysInMonth, startOfMonth]);
-
-  const handleDaySelect = (date: dayjs.Dayjs) => {
-    if (!rangeStart || (rangeStart && rangeEnd)) {
-      setRangeStart(date);
-      setRangeEnd(null);
-    } else if (date.isBefore(rangeStart, "day")) {
-      setRangeStart(date);
-      setRangeEnd(null);
-    } else {
-      setRangeEnd(date);
-    }
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -174,7 +143,7 @@ export default function TokenConsumptionChart() {
             <SelectTrigger className="w-full h-8 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md">
               {selectedRange === "Custom range" && rangeStart && rangeEnd ? (
                 <span className="truncate">
-                  {`${rangeStart.format("D MMM")} - ${rangeEnd.format("D MMM")}`}
+                  {formatDateRangeDisplay(rangeStart, rangeEnd, "D MMM")}
                 </span>
               ) : (
                 <SelectValue placeholder="Select range" />
@@ -188,88 +157,33 @@ export default function TokenConsumptionChart() {
           </Select>
 
           {showCustomRange && (
-            <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[280px] rounded-[16px] border border-neutral-200 bg-white p-5 shadow-xl">
-              <div className="pb-4">
-                <p className="text-[13px] font-semibold text-neutral-900 mb-4">Select Date Range</p>
-                <div className="flex items-center justify-between px-2">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentMonth((month) => month.subtract(1, "month"))}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <span className="text-[13px] font-medium text-neutral-900 text-center">
-                    {currentMonth.format("MMMM YYYY")}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentMonth((month) => month.add(1, "month"))}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-neutral-500 mb-2">
-                {WEEK_DAYS.map((day) => (
-                  <div key={day}>{day}</div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-7 gap-1 text-center">
-                {monthDays.map(({ date, disabled }) => {
-                  const isSelected = (rangeStart && date.isSame(rangeStart, "day")) || (rangeEnd && date.isSame(rangeEnd, "day"));
-                  const isBetween = rangeStart && rangeEnd && date.isAfter(rangeStart, "day") && date.isBefore(rangeEnd, "day");
-                  const isCurrentMonth = date.month() === currentMonth.month();
-                  return (
-                    <button
-                      key={date.toString()}
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => handleDaySelect(date)}
-                      className={cn(
-                        "inline-flex h-8 w-full items-center justify-center text-[13px] font-medium transition-colors rounded-md",
-                        disabled && "opacity-30 cursor-not-allowed",
-                        isSelected && "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] text-white shadow-sm",
-                        isBetween && "bg-purple-100 text-purple-900 rounded-none",
-                        !isSelected && !isBetween && !disabled && isCurrentMonth && "text-neutral-900 hover:bg-neutral-100",
-                        !isSelected && !isBetween && !disabled && !isCurrentMonth && "text-neutral-400"
-                      )}
-                    >
-                      {date.date()}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-6 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
+            <div className="absolute right-0 top-[calc(100%+8px)] z-50">
+              <CommonCalendar
+                range
+                inline
+                showActionButtons
+                value={rangeStart && rangeEnd ? [rangeStart.toDate(), rangeEnd.toDate()] : null}
+                onApply={(val: any) => {
+                  if (Array.isArray(val)) {
+                    if (val[0] && val[1]) {
+                      setRangeStart(dayjs(val[0]));
+                      setRangeEnd(dayjs(val[1]));
+                      setShowCustomRange(false);
+                    }
+                  } else if (val) {
+                    setRangeStart(dayjs(val));
+                    setRangeEnd(dayjs(val));
                     setShowCustomRange(false);
-                    setSelectedRange("Today");
-                    setRangeStart(null);
-                    setRangeEnd(null);
-                  }}
-                  className="rounded-md bg-neutral-100 px-4 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCustomRange(false)}
-                  className={cn(
-                    "rounded-md px-4 py-1.5 text-xs font-medium text-white hover:opacity-90",
-                    rangeStart && rangeEnd
-                      ? "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)]"
-                      : "bg-neutral-500"
-                  )}
-                >
-                  Apply
-                </button>
-              </div>
+                  }
+                }}
+                onCancel={() => {
+                  setShowCustomRange(false);
+                  setSelectedRange("Today");
+                  setRangeStart(null);
+                  setRangeEnd(null);
+                }}
+                popupClassName="shadow-xl"
+              />
             </div>
           )}
         </div>
