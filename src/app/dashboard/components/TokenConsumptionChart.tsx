@@ -35,6 +35,51 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
 };
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const displayDate = dayjs(label).format("DD MMM YYYY");
+
+    return (
+      <div className="bg-white rounded-lg border border-[#E5E5E5] shadow-lg min-w-[320px] overflow-hidden">
+        <div className="flex justify-between items-center px-4 py-2 bg-[var(--color-gray-f3)] border-b border-[#E5E5E5]">
+          <span className="text-sm font-semibold text-neutral-800">Usage Summary</span>
+          <span className="text-[13px] text-neutral-500">{displayDate}</span>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-y-4 gap-x-2 p-4">
+          <div>
+            <p className="text-[13px] text-neutral-500 mb-1">Tokens used</p>
+            <p className="text-[15px] font-semibold text-neutral-900">{data.total_tokens?.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[13px] text-neutral-500 mb-1">Completion Tokens</p>
+            <p className="text-[15px] font-semibold text-neutral-900">{data.completion_tokens?.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[13px] text-neutral-500 mb-1">Prompt Tokens</p>
+            <p className="text-[15px] font-semibold text-neutral-900">{data.prompt_tokens?.toLocaleString()}</p>
+          </div>
+          
+          <div>
+            <p className="text-[13px] text-blue-500 mb-1">Requests</p>
+            <p className="text-[15px] font-semibold text-neutral-900">{data.requests?.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[13px] text-emerald-500 mb-1">Tokens Saved</p>
+            <p className="text-[15px] font-semibold text-neutral-900">{data.optimizer_saved_tokens?.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[13px] text-yellow-500 mb-1">Peak Hour</p>
+            <p className="text-[15px] font-semibold text-neutral-900">-</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function TokenConsumptionChart() {
   const [data, setData] = useState<DailyAnalyticsResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,14 +96,14 @@ export default function TokenConsumptionChart() {
   const monthDays = React.useMemo(() => {
     const days: Array<{ date: dayjs.Dayjs; disabled: boolean }> = [];
     for (let idx = 0; idx < beginningDay; idx += 1) {
-      days.push({ date: startOfMonth.subtract(beginningDay - idx, "day"), disabled: true });
+      days.push({ date: startOfMonth.subtract(beginningDay - idx, "day"), disabled: false });
     }
     for (let day = 1; day <= daysInMonth; day += 1) {
       days.push({ date: startOfMonth.date(day), disabled: false });
     }
     const trailing = (7 - (days.length % 7)) % 7;
     for (let idx = 0; idx < trailing; idx += 1) {
-      days.push({ date: currentMonth.endOf("month").add(idx + 1, "day"), disabled: true });
+      days.push({ date: currentMonth.endOf("month").add(idx + 1, "day"), disabled: false });
     }
     return days;
   }, [beginningDay, currentMonth, daysInMonth, startOfMonth]);
@@ -93,11 +138,10 @@ export default function TokenConsumptionChart() {
     return <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6 h-[400px] animate-pulse"></div>;
   }
 
-  if (!data || data.length === 0) return null;
-
-  const totalTokens = data.reduce((sum, item) => sum + item.total_tokens, 0);
-  const avgTokens = totalTokens / data.length;
-  const maxItem = [...data].sort((a, b) => b.total_tokens - a.total_tokens)[0];
+  const hasData = data && data.length > 0;
+  const totalTokens = hasData ? data.reduce((sum, item) => sum + item.total_tokens, 0) : 0;
+  const avgTokens = hasData ? totalTokens / data.length : 0;
+  const maxItem = hasData ? [...data].sort((a, b) => b.total_tokens - a.total_tokens)[0] : null;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6 mb-6">
@@ -107,15 +151,15 @@ export default function TokenConsumptionChart() {
           <div className="flex gap-2">
             <div className="bg-zinc-50 border border-zinc-100 rounded-md p-3">
               <p className="text-xs text-neutral-500 font-medium mb-1">Total Usage</p>
-              <p className="text-sm font-semibold text-neutral-900">{formatNumber(totalTokens)} Tokens</p>
+              <p className="text-sm font-semibold text-neutral-900">{hasData ? `${formatNumber(totalTokens)} Tokens` : "-"}</p>
             </div>
             <div className="bg-zinc-50 border border-zinc-100 rounded-md p-3">
               <p className="text-xs text-neutral-500 font-medium mb-1">Average/Day</p>
-              <p className="text-sm font-semibold text-neutral-900">{formatNumber(avgTokens)} Tokens</p>
+              <p className="text-sm font-semibold text-neutral-900">{hasData ? `${formatNumber(avgTokens)} Tokens` : "-"}</p>
             </div>
             <div className="bg-zinc-50 border border-zinc-100 rounded-md p-3">
               <p className="text-xs text-neutral-500 font-medium mb-1">Highest Usage</p>
-              <p className="text-sm font-semibold text-neutral-900">{formatNumber(maxItem.total_tokens)} • {formatDate(maxItem.period)}</p>
+              <p className="text-sm font-semibold text-neutral-900">{hasData && maxItem ? `${formatNumber(maxItem.total_tokens)} • ${formatDate(maxItem.period)}` : "-"}</p>
             </div>
           </div>
         </div>
@@ -128,7 +172,13 @@ export default function TokenConsumptionChart() {
             }
           }}>
             <SelectTrigger className="w-full h-8 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md">
-              <SelectValue placeholder="Select range" />
+              {selectedRange === "Custom range" && rangeStart && rangeEnd ? (
+                <span className="truncate">
+                  {`${rangeStart.format("D MMM")} - ${rangeEnd.format("D MMM")}`}
+                </span>
+              ) : (
+                <SelectValue placeholder="Select range" />
+              )}
             </SelectTrigger>
             <SelectContent align="end" alignItemWithTrigger={false}>
               <SelectItem value="Today" className="text-xs">Today</SelectItem>
@@ -182,7 +232,7 @@ export default function TokenConsumptionChart() {
                       className={cn(
                         "inline-flex h-8 w-full items-center justify-center text-[13px] font-medium transition-colors rounded-md",
                         disabled && "opacity-30 cursor-not-allowed",
-                        isSelected && "bg-purple-600 text-white shadow-sm",
+                        isSelected && "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] text-white shadow-sm",
                         isBetween && "bg-purple-100 text-purple-900 rounded-none",
                         !isSelected && !isBetween && !disabled && isCurrentMonth && "text-neutral-900 hover:bg-neutral-100",
                         !isSelected && !isBetween && !disabled && !isCurrentMonth && "text-neutral-400"
@@ -210,7 +260,12 @@ export default function TokenConsumptionChart() {
                 <button
                   type="button"
                   onClick={() => setShowCustomRange(false)}
-                  className="rounded-md bg-neutral-500 px-4 py-1.5 text-xs font-medium text-white hover:opacity-90"
+                  className={cn(
+                    "rounded-md px-4 py-1.5 text-xs font-medium text-white hover:opacity-90",
+                    rangeStart && rangeEnd
+                      ? "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)]"
+                      : "bg-neutral-500"
+                  )}
                 >
                   Apply
                 </button>
@@ -221,8 +276,9 @@ export default function TokenConsumptionChart() {
       </div>
 
       <div className="h-[280px] w-full mt-8">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
+        {hasData ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
             data={data}
             margin={{
               top: 10,
@@ -253,15 +309,8 @@ export default function TokenConsumptionChart() {
               tick={{ fontSize: 12, fill: "#737373" }}
             />
             <Tooltip 
-              contentStyle={{ borderRadius: "8px", border: "1px solid #E5E5E5", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-              labelFormatter={(label) => {
-                const labelText = typeof label === "string" || typeof label === "number" ? String(label) : "";
-                return labelText ? formatDate(labelText) : "";
-              }}
-              formatter={(value) => {
-                const numericValue = Array.isArray(value) ? Number(value[0] ?? 0) : Number(value ?? 0);
-                return [numericValue.toLocaleString(), "Tokens"] as [string, string];
-              }}
+              content={<CustomTooltip />}
+              cursor={{ stroke: '#E5E5E5', strokeWidth: 1, strokeDasharray: '4 4', fill: 'transparent' }}
             />
             <Area
               type="monotone"
@@ -270,9 +319,14 @@ export default function TokenConsumptionChart() {
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorTokens)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-neutral-500">
+            No data available
+          </div>
+        )}
       </div>
     </div>
   );

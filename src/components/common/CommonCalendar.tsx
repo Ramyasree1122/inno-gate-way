@@ -98,20 +98,26 @@ export function CommonCalendar({
 
   const monthDays = React.useMemo(() => {
     const days: Array<{ date: dayjs.Dayjs; disabled: boolean }> = [];
+    
+    const checkDisabled = (date: dayjs.Dayjs) => Boolean(
+      (minDate && date.isBefore(dayjs(minDate).startOf("day"))) ||
+      (maxDate && date.isAfter(dayjs(maxDate).startOf("day")))
+    );
+
     for (let idx = 0; idx < beginningDay; idx += 1) {
-      days.push({ date: startOfMonth.subtract(beginningDay - idx, "day"), disabled: true });
+      const date = startOfMonth.subtract(beginningDay - idx, "day");
+      days.push({ date, disabled: checkDisabled(date) });
     }
+    
     for (let day = 1; day <= daysInMonth; day += 1) {
       const date = startOfMonth.date(day);
-      const disabled = Boolean(
-        (minDate && date.isBefore(dayjs(minDate).startOf("day"))) ||
-        (maxDate && date.isAfter(dayjs(maxDate).startOf("day")))
-      );
-      days.push({ date, disabled });
+      days.push({ date, disabled: checkDisabled(date) });
     }
+    
     const trailing = (7 - (days.length % 7)) % 7;
     for (let idx = 0; idx < trailing; idx += 1) {
-      days.push({ date: currentMonth.endOf("month").add(idx + 1, "day"), disabled: true });
+      const date = currentMonth.endOf("month").add(idx + 1, "day");
+      days.push({ date, disabled: checkDisabled(date) });
     }
     return days;
   }, [beginningDay, currentMonth, daysInMonth, minDate, maxDate, startOfMonth]);
@@ -233,7 +239,7 @@ export function CommonCalendar({
                   className={cn(
                     "inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition",
                     disabled && "cursor-not-allowed opacity-40",
-                    (isSelected || isRangeSelected) && "bg-purple-600 text-white shadow-sm",
+                    (isSelected || isRangeSelected) && "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] text-white shadow-sm",
                     isBetween && "bg-purple-100 text-purple-900",
                     !(isSelected || isRangeSelected || isBetween) && !disabled && isCurrentMonth && "text-neutral-900 hover:bg-neutral-100",
                     !(isSelected || isRangeSelected || isBetween) && !disabled && !isCurrentMonth && "text-neutral-400",

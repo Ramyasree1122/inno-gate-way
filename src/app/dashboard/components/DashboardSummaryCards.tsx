@@ -39,47 +39,43 @@ export default function DashboardSummaryCards() {
     );
   }
 
-  if (!data) {
-    return null; // Or some error state if desired
-  }
-
   const cards = [
     {
       title: "Total Tokens",
-      value: data.total_tokens.toLocaleString(),
+      value: data ? data.total_tokens.toLocaleString() : "-",
       icon: "total-tokens-icon",
       bgColor: "bg-blue-50",
       textColor: "text-blue-600",
     },
     {
       title: "Total Users",
-      value: data.active_users.toLocaleString(), // Mapping to active_users based on available API data
+      value: data ? data.active_users.toLocaleString() : "-",
       icon: "total-saved-icon",
       bgColor: "bg-emerald-50",
       textColor: "text-emerald-600",
     },
     {
       title: "API Requests",
-      value: data.total_requests.toLocaleString(),
+      value: data ? data.total_requests.toLocaleString() : "-",
       icon: "api-request-icon",
       bgColor: "bg-purple-50",
       textColor: "text-purple-600",
     },
     {
       title: "Active Keys",
-      value: data.active_api_keys.toLocaleString(),
+      value: data ? data.active_api_keys.toLocaleString() : "-",
       icon: "active-key-icon",
       bgColor: "bg-orange-50",
     },
     {
       title: "Active users",
-      value: data.active_users.toLocaleString(),
+      value: data ? data.active_users.toLocaleString() : "-",
       icon: "active-user-icon",
       bgColor: "bg-cyan-50",
     },
     {
       title: "Error rate",
-      value: `${data.error_rate.toFixed(2)}%`,
+      value: data ? `${data.error_rate.toFixed(2)}%` : "-",
       icon: "error-rate-icon",
       bgColor: "bg-red-50",
     },
