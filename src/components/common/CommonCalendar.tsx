@@ -16,14 +16,19 @@ export interface CommonCalendarProps {
   className?: string;
   inputClassName?: string;
   popupClassName?: string;
+  inline?: boolean;
+  showActionButtons?: boolean;
+  onApply?: (val: any) => void;
+  onCancel?: () => void;
 }
 
 const WEEK_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 function normalizeDate(value?: any) {
-  if (Array.isArray(value)) return null;
   if (!value) return null;
-  return dayjs(value).isValid() ? dayjs(value).startOf("day") : null;
+  const val = Array.isArray(value) ? value[0] : value;
+  if (!val) return null;
+  return dayjs(val).isValid() ? dayjs(val).startOf("day") : null;
 }
 
 function normalizeRange(value?: any): [dayjs.Dayjs | null, dayjs.Dayjs | null] {
@@ -32,6 +37,15 @@ function normalizeRange(value?: any): [dayjs.Dayjs | null, dayjs.Dayjs | null] {
   const end = value[1] && dayjs(value[1]).isValid() ? dayjs(value[1]).startOf("day") : null;
   return [start, end];
 }
+
+export const formatDateRangeDisplay = (start: dayjs.Dayjs | null, end: dayjs.Dayjs | null, format = "MMM D, YYYY") => {
+  if (start && end) {
+    if (start.isSame(end, 'day')) return start.format(format);
+    return `${start.format(format)} - ${end.format(format)}`;
+  }
+  if (start) return `${start.format(format)} -`;
+  return "";
+};
 
 export function CommonCalendar({
   range,
@@ -44,8 +58,12 @@ export function CommonCalendar({
   className,
   inputClassName,
   popupClassName,
+  inline,
+  showActionButtons,
+  onApply,
+  onCancel,
 }: CommonCalendarProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(inline || false);
   const [selectedDate, setSelectedDate] = React.useState<dayjs.Dayjs | null>(normalizeDate(value));
   const [selectedRange, setSelectedRange] = React.useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>(normalizeRange(value));
   const [hoverDate, setHoverDate] = React.useState<dayjs.Dayjs | null>(null);
@@ -67,6 +85,7 @@ export function CommonCalendar({
   }, [value, range]);
 
   React.useEffect(() => {
+    if (inline) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (
         containerRef.current &&
@@ -78,16 +97,10 @@ export function CommonCalendar({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const formatRange = (start: dayjs.Dayjs | null, end: dayjs.Dayjs | null) => {
-    if (start && end) return `${start.format("MMM D, YYYY")} - ${end.format("MMM D, YYYY")}`;
-    if (start) return `${start.format("MMM D, YYYY")} -`;
-    return "";
-  };
+  }, [inline]);
 
   const selectedLabel = range
-    ? formatRange(selectedRange[0], selectedRange[1])
+    ? formatDateRangeDisplay(selectedRange[0], selectedRange[1])
     : selectedDate
     ? selectedDate.format("MMM D, YYYY")
     : "";
@@ -133,24 +146,170 @@ export function CommonCalendar({
     if (range) {
       if (!selectedRange[0] || (selectedRange[0] && selectedRange[1])) {
         setSelectedRange([date, null]);
-        onChange?.([date.toDate(), null]);
+        if (!showActionButtons) {
+          onChange?.([date.toDate(), null]);
+        }
       } else {
         if (date.isBefore(selectedRange[0])) {
           setSelectedRange([date, null]);
-          onChange?.([date.toDate(), null]);
+          if (!showActionButtons) {
+            onChange?.([date.toDate(), null]);
+          }
         } else {
           setSelectedRange([selectedRange[0], date]);
-          onChange?.([selectedRange[0].toDate(), date.toDate()]);
-          setIsOpen(false);
+          if (!showActionButtons) {
+            onChange?.([selectedRange[0].toDate(), date.toDate()]);
+            if (!inline) setIsOpen(false);
+          }
           setHoverDate(null);
         }
       }
     } else {
       setSelectedDate(date);
-      onChange?.(date.toDate());
-      setIsOpen(false);
+      if (!showActionButtons) {
+        onChange?.(date.toDate());
+        if (!inline) setIsOpen(false);
+      }
     }
   };
+
+  const handleApply = () => {
+    if (range) {
+      if (selectedRange[0] && selectedRange[1]) {
+        const val = [selectedRange[0].toDate(), selectedRange[1].toDate()];
+        onChange?.(val);
+        onApply?.(val);
+        if (!inline) setIsOpen(false);
+      }
+    } else {
+      if (selectedDate) {
+        const val = selectedDate.toDate();
+        onChange?.(val);
+        onApply?.(val);
+        if (!inline) setIsOpen(false);
+      }
+    }
+  };
+
+  const handleCancel = () => {
+    if (range) {
+      const parsed = normalizeRange(value);
+      setSelectedRange(parsed);
+      if (parsed[0]) setCurrentMonth(parsed[0].startOf("month"));
+    } else {
+      const parsed = normalizeDate(value);
+      setSelectedDate(parsed);
+      if (parsed) setCurrentMonth(parsed.startOf("month"));
+    }
+    onCancel?.();
+    if (!inline) setIsOpen(false);
+  };
+
+  const calendarContent = (
+    <div
+      className={cn(
+        "w-[280px] rounded-[16px] border border-neutral-200 bg-white p-5",
+        !inline && "absolute left-0 top-full z-50 mt-2 shadow-xl",
+        popupClassName,
+      )}
+    >
+      <div className="pb-4">
+        <p className="text-[13px] font-semibold text-neutral-900 mb-4">Select Date{range ? " Range" : ""}</p>
+        <div className="flex items-center justify-between px-2">
+          <button
+            type="button"
+            onClick={() => setCurrentMonth((month) => month.subtract(1, "month"))}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-[13px] font-medium text-neutral-900 text-center">
+            {currentMonth.format("MMMM YYYY")}
+          </span>
+          <button
+            type="button"
+            onClick={() => setCurrentMonth((month) => month.add(1, "month"))}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-neutral-500 mb-2">
+        {WEEK_DAYS.map((day) => (
+          <div key={day}>{day}</div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {monthDays.map(({ date, disabled }) => {
+          const isSelected = !range && !!selectedDate && date.isSame(selectedDate, "day");
+          const isCurrentMonth = date.month() === currentMonth.month();
+          
+          const isRangeStart = range && !!selectedRange[0] && date.isSame(selectedRange[0], "day");
+          const isRangeEnd = range && !!selectedRange[1] && date.isSame(selectedRange[1], "day");
+          const isRangeSelected = isRangeStart || isRangeEnd;
+          
+          const isBetween = range && !!selectedRange[0] && (
+            (!!selectedRange[1] && date.isAfter(selectedRange[0]) && date.isBefore(selectedRange[1])) ||
+            (!selectedRange[1] && hoverDate && date.isAfter(selectedRange[0]) && date.isBefore(hoverDate))
+          );
+
+          return (
+            <button
+              key={date.toString()}
+              type="button"
+              disabled={disabled}
+              onClick={() => handleDaySelect(date)}
+              onMouseEnter={() => {
+                if (range && selectedRange[0] && !selectedRange[1]) setHoverDate(date);
+              }}
+              className={cn(
+                "inline-flex h-8 w-full items-center justify-center text-[13px] font-medium transition-colors rounded-md",
+                disabled && "cursor-not-allowed opacity-30",
+                (isSelected || isRangeSelected) && "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] text-white shadow-sm",
+                isBetween && "bg-purple-100 text-purple-900 rounded-none",
+                !(isSelected || isRangeSelected || isBetween) && !disabled && isCurrentMonth && "text-neutral-900 hover:bg-neutral-100",
+                !(isSelected || isRangeSelected || isBetween) && !disabled && !isCurrentMonth && "text-neutral-400",
+              )}
+            >
+              {date.date()}
+            </button>
+          );
+        })}
+      </div>
+
+      {showActionButtons && (
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="rounded-md bg-neutral-100 px-4 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleApply}
+            className={cn(
+              "rounded-md px-4 py-1.5 text-xs font-medium text-white hover:opacity-90",
+              (range ? (selectedRange[0] && selectedRange[1]) : selectedDate)
+                ? "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)]"
+                : "bg-neutral-500 cursor-not-allowed opacity-50"
+            )}
+            disabled={range ? (!selectedRange[0] || !selectedRange[1]) : !selectedDate}
+          >
+            Apply
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  if (inline) {
+    return <div className={cn("w-full", className)}>{calendarContent}</div>;
+  }
 
   return (
     <div className={cn("relative w-full", className)} ref={containerRef}>
@@ -174,84 +333,7 @@ export function CommonCalendar({
         </span>
         <CalendarDays className="h-4 w-4 text-neutral-400" />
       </button>
-
-      {isOpen && (
-        <div
-          className={cn(
-            "absolute left-0 top-full z-50 mt-3 min-w-[320px] rounded-[28px] border border-neutral-200 bg-white p-5 shadow-[0_22px_80px_rgba(15,23,42,0.12)]",
-            popupClassName,
-          )}
-        >
-          <div className="flex items-center justify-between gap-4 pb-4">
-            <div>
-              <p className="text-sm font-semibold text-neutral-900">Select Date</p>
-              <p className="text-xs text-neutral-500">Choose a start or end date</p>
-            </div>
-            <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 p-1">
-              <button
-                type="button"
-                onClick={() => setCurrentMonth((month) => month.subtract(1, "month"))}
-                aria-label="Previous month"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-white hover:text-neutral-700"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentMonth((month) => month.add(1, "month"))}
-                aria-label="Next month"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-white hover:text-neutral-700"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
-            {WEEK_DAYS.map((day) => (
-              <div key={day}>{day}</div>
-            ))}
-          </div>
-
-          <div className="mt-3 grid grid-cols-7 gap-2 text-center">
-            {monthDays.map(({ date, disabled }) => {
-              const isSelected = !range && !!selectedDate && date.isSame(selectedDate, "day");
-              const isCurrentMonth = date.month() === currentMonth.month();
-              
-              const isRangeStart = range && !!selectedRange[0] && date.isSame(selectedRange[0], "day");
-              const isRangeEnd = range && !!selectedRange[1] && date.isSame(selectedRange[1], "day");
-              const isRangeSelected = isRangeStart || isRangeEnd;
-              
-              const isBetween = range && !!selectedRange[0] && (
-                (!!selectedRange[1] && date.isAfter(selectedRange[0]) && date.isBefore(selectedRange[1])) ||
-                (!selectedRange[1] && hoverDate && date.isAfter(selectedRange[0]) && date.isBefore(hoverDate))
-              );
-
-              return (
-                <button
-                  key={date.toString()}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => handleDaySelect(date)}
-                  onMouseEnter={() => {
-                    if (range && selectedRange[0] && !selectedRange[1]) setHoverDate(date);
-                  }}
-                  className={cn(
-                    "inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition",
-                    disabled && "cursor-not-allowed opacity-40",
-                    (isSelected || isRangeSelected) && "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] text-white shadow-sm",
-                    isBetween && "bg-purple-100 text-purple-900",
-                    !(isSelected || isRangeSelected || isBetween) && !disabled && isCurrentMonth && "text-neutral-900 hover:bg-neutral-100",
-                    !(isSelected || isRangeSelected || isBetween) && !disabled && !isCurrentMonth && "text-neutral-400",
-                  )}
-                >
-                  {date.date()}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {isOpen && calendarContent}
     </div>
   );
 }
