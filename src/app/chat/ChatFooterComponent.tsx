@@ -23,10 +23,9 @@ import {
 import { chatService } from "@/services/chatService";
 import { authService } from "@/services/authService";
 
-export interface Model {
+interface Model {
   id: string;
   display_name?: string;
-  name: string;
 }
 
 interface Provider {

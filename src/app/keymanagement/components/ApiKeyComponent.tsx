@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Workspace } from "./WorkspaceComponent";
 import { CommonCalendar } from "@/components/common/CommonCalendar";
-import { Model } from "@/app/chat/ChatFooterComponent";
+
 
 export interface ApiKey {
   id: string;
