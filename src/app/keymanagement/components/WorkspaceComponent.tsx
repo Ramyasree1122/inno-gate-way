@@ -20,7 +20,8 @@ export function WorkspaceComponent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = React.useState("");
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [editingWorkspace, setEditingWorkspace] = React.useState<Workspace | null>(null);
+  const [editingWorkspace, setEditingWorkspace] =
+    React.useState<Workspace | null>(null);
   const [editWorkspaceName, setEditWorkspaceName] = React.useState("");
 
   const fetchWorkspaces = async () => {
@@ -33,15 +34,7 @@ export function WorkspaceComponent() {
   };
 
   useEffect(() => {
-    let isMounted = true;
-    keymanagementService.getAllWorkspaces().then((res) => {
-      if (isMounted) {
-        setWorkspaces(res || []);
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
+    fetchWorkspaces();
   }, []);
 
   const handleEditWorkspace = (workspace: Workspace) => {
@@ -59,7 +52,8 @@ export function WorkspaceComponent() {
     e.preventDefault();
     if (!newWorkspaceName.trim()) return;
     try {
-      const response = await keymanagementService.createWorkspace(newWorkspaceName);
+      const response =
+        await keymanagementService.createWorkspace(newWorkspaceName);
       if (response) {
         await fetchWorkspaces();
       }
@@ -93,7 +87,9 @@ export function WorkspaceComponent() {
     e.preventDefault();
     if (!editingWorkspace) return;
     try {
-      const response = await keymanagementService.deleteWorkspace(editingWorkspace.id);
+      const response = await keymanagementService.deleteWorkspace(
+        editingWorkspace.id,
+      );
       if (response) {
         await fetchWorkspaces();
       }

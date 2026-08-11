@@ -1,4 +1,4 @@
-export type Role = 'User' | 'Admin' | 'Super Admin';
+export type Role = "User" | "Admin" | "Super Admin";
 
 export interface User {
   id: string;
@@ -14,4 +14,13 @@ export interface AuthState {
   loginUser: (email: string, otp: string) => Promise<void>;
   loginAdmin: (email: string, password: string) => Promise<void>;
   logout: () => void;
+}
+
+export interface GenerateAPIKeyPayload {
+  access_anthropic: boolean;
+  access_qwen: boolean;
+  expires_at: string | null;
+  owner: string;
+  rate_limit_per_minute: number;
+  workspace_id: string;
 }
