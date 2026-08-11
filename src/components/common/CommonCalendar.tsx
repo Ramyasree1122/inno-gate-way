@@ -20,6 +20,8 @@ export interface CommonCalendarProps {
   showActionButtons?: boolean;
   onApply?: (val: any) => void;
   onCancel?: () => void;
+  showTime?: boolean;
+  calendarTitle?: string;
 }
 
 const WEEK_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -33,14 +35,24 @@ function normalizeDate(value?: any) {
 
 function normalizeRange(value?: any): [dayjs.Dayjs | null, dayjs.Dayjs | null] {
   if (!Array.isArray(value)) return [null, null];
-  const start = value[0] && dayjs(value[0]).isValid() ? dayjs(value[0]).startOf("day") : null;
-  const end = value[1] && dayjs(value[1]).isValid() ? dayjs(value[1]).startOf("day") : null;
+  const start =
+    value[0] && dayjs(value[0]).isValid()
+      ? dayjs(value[0]).startOf("day")
+      : null;
+  const end =
+    value[1] && dayjs(value[1]).isValid()
+      ? dayjs(value[1]).startOf("day")
+      : null;
   return [start, end];
 }
 
-export const formatDateRangeDisplay = (start: dayjs.Dayjs | null, end: dayjs.Dayjs | null, format = "MMM D, YYYY") => {
+export const formatDateRangeDisplay = (
+  start: dayjs.Dayjs | null,
+  end: dayjs.Dayjs | null,
+  format = "MMM D, YYYY",
+) => {
   if (start && end) {
-    if (start.isSame(end, 'day')) return start.format(format);
+    if (start.isSame(end, "day")) return start.format(format);
     return `${start.format(format)} - ${end.format(format)}`;
   }
   if (start) return `${start.format(format)} -`;
@@ -53,6 +65,8 @@ export function CommonCalendar({
   onChange,
   placeholder = "Select date",
   label,
+  showTime = false,
+  calendarTitle,
   minDate,
   maxDate,
   className,
@@ -64,13 +78,24 @@ export function CommonCalendar({
   onCancel,
 }: CommonCalendarProps) {
   const [isOpen, setIsOpen] = React.useState(inline || false);
-  const [selectedDate, setSelectedDate] = React.useState<dayjs.Dayjs | null>(normalizeDate(value));
-  const [selectedRange, setSelectedRange] = React.useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>(normalizeRange(value));
+  const [selectedDate, setSelectedDate] = React.useState<dayjs.Dayjs | null>(
+    normalizeDate(value),
+  );
+  const [selectedRange, setSelectedRange] = React.useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null]
+  >(normalizeRange(value));
   const [hoverDate, setHoverDate] = React.useState<dayjs.Dayjs | null>(null);
-  
-  const initialMonth = range ? (selectedRange[0] ?? dayjs().startOf("month")) : (selectedDate ?? dayjs().startOf("month"));
-  const [currentMonth, setCurrentMonth] = React.useState<dayjs.Dayjs>(initialMonth);
+
+  const initialMonth = range
+    ? (selectedRange[0] ?? dayjs().startOf("month"))
+    : (selectedDate ?? dayjs().startOf("month"));
+  const [currentMonth, setCurrentMonth] =
+    React.useState<dayjs.Dayjs>(initialMonth);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  const [hour, setHour] = React.useState("00");
+const [minute, setMinute] = React.useState("00");
+const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
 
   React.useEffect(() => {
     if (range) {
@@ -102,8 +127,8 @@ export function CommonCalendar({
   const selectedLabel = range
     ? formatDateRangeDisplay(selectedRange[0], selectedRange[1])
     : selectedDate
-    ? selectedDate.format("MMM D, YYYY")
-    : "";
+      ? selectedDate.format("MMM D, YYYY")
+      : "";
 
   const daysInMonth = currentMonth.daysInMonth();
   const startOfMonth = currentMonth.startOf("month");
@@ -111,22 +136,23 @@ export function CommonCalendar({
 
   const monthDays = React.useMemo(() => {
     const days: Array<{ date: dayjs.Dayjs; disabled: boolean }> = [];
-    
-    const checkDisabled = (date: dayjs.Dayjs) => Boolean(
-      (minDate && date.isBefore(dayjs(minDate).startOf("day"))) ||
-      (maxDate && date.isAfter(dayjs(maxDate).startOf("day")))
-    );
+
+    const checkDisabled = (date: dayjs.Dayjs) =>
+      Boolean(
+        (minDate && date.isBefore(dayjs(minDate).startOf("day"))) ||
+        (maxDate && date.isAfter(dayjs(maxDate).startOf("day"))),
+      );
 
     for (let idx = 0; idx < beginningDay; idx += 1) {
       const date = startOfMonth.subtract(beginningDay - idx, "day");
       days.push({ date, disabled: checkDisabled(date) });
     }
-    
+
     for (let day = 1; day <= daysInMonth; day += 1) {
       const date = startOfMonth.date(day);
       days.push({ date, disabled: checkDisabled(date) });
     }
-    
+
     const trailing = (7 - (days.length % 7)) % 7;
     for (let idx = 0; idx < trailing; idx += 1) {
       const date = currentMonth.endOf("month").add(idx + 1, "day");
@@ -142,7 +168,7 @@ export function CommonCalendar({
     ) {
       return;
     }
-    
+
     if (range) {
       if (!selectedRange[0] || (selectedRange[0] && selectedRange[1])) {
         setSelectedRange([date, null]);
@@ -214,11 +240,15 @@ export function CommonCalendar({
       )}
     >
       <div className="pb-4">
-        <p className="text-[13px] font-semibold text-neutral-900 mb-4">Select Date{range ? " Range" : ""}</p>
+        <p className="text-[13px] font-semibold text-neutral-900 mb-4">
+          {calendarTitle || `Select Date${range ? " Range" : ""}`}
+        </p>
         <div className="flex items-center justify-between px-2">
           <button
             type="button"
-            onClick={() => setCurrentMonth((month) => month.subtract(1, "month"))}
+            onClick={() =>
+              setCurrentMonth((month) => month.subtract(1, "month"))
+            }
             className="inline-flex h-7 w-7 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -244,17 +274,26 @@ export function CommonCalendar({
 
       <div className="grid grid-cols-7 gap-1 text-center">
         {monthDays.map(({ date, disabled }) => {
-          const isSelected = !range && !!selectedDate && date.isSame(selectedDate, "day");
+          const isSelected =
+            !range && !!selectedDate && date.isSame(selectedDate, "day");
           const isCurrentMonth = date.month() === currentMonth.month();
-          
-          const isRangeStart = range && !!selectedRange[0] && date.isSame(selectedRange[0], "day");
-          const isRangeEnd = range && !!selectedRange[1] && date.isSame(selectedRange[1], "day");
+
+          const isRangeStart =
+            range && !!selectedRange[0] && date.isSame(selectedRange[0], "day");
+          const isRangeEnd =
+            range && !!selectedRange[1] && date.isSame(selectedRange[1], "day");
           const isRangeSelected = isRangeStart || isRangeEnd;
-          
-          const isBetween = range && !!selectedRange[0] && (
-            (!!selectedRange[1] && date.isAfter(selectedRange[0]) && date.isBefore(selectedRange[1])) ||
-            (!selectedRange[1] && hoverDate && date.isAfter(selectedRange[0]) && date.isBefore(hoverDate))
-          );
+
+          const isBetween =
+            range &&
+            !!selectedRange[0] &&
+            ((!!selectedRange[1] &&
+              date.isAfter(selectedRange[0]) &&
+              date.isBefore(selectedRange[1])) ||
+              (!selectedRange[1] &&
+                hoverDate &&
+                date.isAfter(selectedRange[0]) &&
+                date.isBefore(hoverDate)));
 
           return (
             <button
@@ -263,15 +302,23 @@ export function CommonCalendar({
               disabled={disabled}
               onClick={() => handleDaySelect(date)}
               onMouseEnter={() => {
-                if (range && selectedRange[0] && !selectedRange[1]) setHoverDate(date);
+                if (range && selectedRange[0] && !selectedRange[1])
+                  setHoverDate(date);
               }}
               className={cn(
                 "inline-flex h-8 w-full items-center justify-center text-[13px] font-medium transition-colors rounded-md",
                 disabled && "cursor-not-allowed opacity-30",
-                (isSelected || isRangeSelected) && "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] text-white shadow-sm",
+                (isSelected || isRangeSelected) &&
+                  "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] text-white shadow-sm",
                 isBetween && "bg-purple-100 text-purple-900 rounded-none",
-                !(isSelected || isRangeSelected || isBetween) && !disabled && isCurrentMonth && "text-neutral-900 hover:bg-neutral-100",
-                !(isSelected || isRangeSelected || isBetween) && !disabled && !isCurrentMonth && "text-neutral-400",
+                !(isSelected || isRangeSelected || isBetween) &&
+                  !disabled &&
+                  isCurrentMonth &&
+                  "text-neutral-900 hover:bg-neutral-100",
+                !(isSelected || isRangeSelected || isBetween) &&
+                  !disabled &&
+                  !isCurrentMonth &&
+                  "text-neutral-400",
               )}
             >
               {date.date()}
@@ -279,6 +326,76 @@ export function CommonCalendar({
           );
         })}
       </div>
+      {showTime && (
+        <div className="border-t border-neutral-200 mt-3 pt-3">
+          <p className="text-sm font-semibold text-neutral-900 mb-2">Time</p>
+
+          <div className="flex items-center gap-2">
+            {/* Hour */}
+            <input
+              type="text"
+              value={hour}
+                onChange={(e) => {
+          const value = e.target.value.replace(/\D/g, "");
+
+          if (value === "" || Number(value) <= 12) {
+            setHour(value);
+          }
+        }}
+
+              maxLength={2}
+              placeholder="00"
+              className="w-[52px] h-9 rounded-md border border-neutral-300 bg-white px-2 text-center text-sm font-medium text-neutral-900 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-200"
+            />
+
+            <span className="text-sm font-semibold text-neutral-700">:</span>
+
+            {/* Minute */}
+            <input
+              type="text"
+              value={minute}
+ onChange={(e) => {
+          const value = e.target.value.replace(/\D/g, "");
+
+          if (value === "" || Number(value) <= 59) {
+            setMinute(value);
+          }
+        }}              maxLength={2}
+              placeholder="00"
+              className="w-[52px] h-9 rounded-md border border-neutral-300 bg-white px-2 text-center text-sm font-medium text-neutral-900 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-200"
+            />
+
+            {/* AM / PM */}
+            <div className="ml-1 flex h-9 items-center rounded-xl bg-neutral-100 p-0.5">
+              <button
+                type="button"
+                onClick={() => setAmpm("AM")}
+                className={cn(
+                  "h-8 min-w-[50px] rounded-lg px-3 text-sm font-medium transition-all",
+                  ampm === "AM"
+                  ?"bg-white text-neutral-900 shadow-sm"
+                  : "text-neutral-500 hover:text-neutral-900"
+                )}
+              >
+                AM
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAmpm("PM")}
+                 className={cn(
+            "h-8 min-w-[50px] rounded-lg px-3 text-sm font-medium transition-all",
+            ampm === "PM"
+              ? "bg-white text-neutral-900 shadow-sm"
+              : "text-neutral-500 hover:text-neutral-900"
+          )}
+              >
+                PM
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showActionButtons && (
         <div className="mt-6 flex justify-end gap-2">
@@ -294,11 +411,13 @@ export function CommonCalendar({
             onClick={handleApply}
             className={cn(
               "rounded-md px-4 py-1.5 text-xs font-medium text-white hover:opacity-90",
-              (range ? (selectedRange[0] && selectedRange[1]) : selectedDate)
+              (range ? selectedRange[0] && selectedRange[1] : selectedDate)
                 ? "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)]"
-                : "bg-neutral-500 cursor-not-allowed opacity-50"
+                : "bg-neutral-500 cursor-not-allowed opacity-50",
             )}
-            disabled={range ? (!selectedRange[0] || !selectedRange[1]) : !selectedDate}
+            disabled={
+              range ? !selectedRange[0] || !selectedRange[1] : !selectedDate
+            }
           >
             Apply
           </button>
@@ -328,7 +447,12 @@ export function CommonCalendar({
           inputClassName,
         )}
       >
-        <span className={cn("truncate text-left text-sm", selectedLabel ? "text-neutral-900" : "text-neutral-500")}> 
+        <span
+          className={cn(
+            "truncate text-left text-sm",
+            selectedLabel ? "text-neutral-900" : "text-neutral-500",
+          )}
+        >
           {selectedLabel || placeholder}
         </span>
         <CalendarDays className="h-4 w-4 text-neutral-400" />
