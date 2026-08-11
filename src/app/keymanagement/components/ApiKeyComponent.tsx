@@ -19,7 +19,6 @@ import {
 import { Workspace } from "./WorkspaceComponent";
 import { CommonCalendar } from "@/components/common/CommonCalendar";
 
-
 export interface ApiKey {
   id: string;
   workspace_id: string;
@@ -33,7 +32,10 @@ export interface ApiKey {
   created_at: string;
   expires_at: string | null;
 }
-
+interface Provider{
+  id:string;
+  name:string;
+}
 const CopyButton = ({
   text,
   disabled,
@@ -72,7 +74,7 @@ const CopyButton = ({
 export function ApiKeyComponent() {
   const [apiKeys, setApiKeys] = React.useState<ApiKey[]>([]);
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
-  const [providers, setProviders] = React.useState<Model[]>([]);
+  const [providers, setProviders] = React.useState<Provider[]>([]);
 
   // Modal states
   const [ApiKeyModalOpen, setApiKeyModalOpen] = React.useState(false);
@@ -521,15 +523,21 @@ export function ApiKeyComponent() {
                 }
                 placeholder="dd/mm/yyyy , --:-- --"
                 inputClassName="rounded-md py-2 shadow-xs placeholder:text-neutral-500"
+                popupClassName="bottom-full top-auto mb-2 shadow-xl z-50"
+                showActionButtons
+                showTime={true}
+                range
+                calendarTitle="Select Date & Time"
               />
-
             </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-neutral-950">
                 Provider access
               </label>
-              <div className="space-y-2 mt-1">                 {providers.map((provider) => {
+              <div className="space-y-2 mt-1">
+                {" "}
+                {providers.map((provider) => {
                   const isChecked =
                     provider.id === "qwen"
                       ? createForm.access_qwen
@@ -537,7 +545,10 @@ export function ApiKeyComponent() {
                         ? createForm.access_anthropic
                         : false;
                   return (
-                    <div key={provider.id} className="flex items-center gap-3 py-1">
+                    <div
+                      key={provider.id}
+                      className="flex items-center gap-3 py-1"
+                    >
                       <label className="flex items-center gap-2 cursor-pointer select-none">
                         <input
                           type="checkbox"
@@ -560,12 +571,17 @@ export function ApiKeyComponent() {
                         <div
                           className={`w-5 h-5 rounded flex items-center justify-center border transition-all duration-200 shadow-sm
                             ${
-                            isChecked
-                              ? "bg-neutral-900 border-neutral-900 text-white"
-                              : "bg-white border-neutral-300 hover:border-neutral-400"
-                          }`}
+                              isChecked
+                                ? "bg-neutral-900 border-neutral-900 text-white"
+                                : "bg-white border-neutral-300 hover:border-neutral-400"
+                            }`}
                         >
-                          {isChecked && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                          {isChecked && (
+                            <Check
+                              className="w-3.5 h-3.5 text-white"
+                              strokeWidth={3}
+                            />
+                          )}
                         </div>
                         <span className="text-sm text-neutral-900 font-normal">
                           {provider.name}
