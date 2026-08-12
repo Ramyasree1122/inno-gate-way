@@ -249,7 +249,7 @@ const HistoryComponent = () => {
             {/* Filter Action Icon */}
             <button
               onClick={openFilterModal}
-              className="flex items-center justify-center p-2 bg-neutral-100  rounded-md text-neutral-950 font-normal text-sm shadow-xs hover:bg-neutral-50 transition-colors"
+              className="flex items-center justify-center p-2 bg-neutral-100  rounded-md text-neutral-950 font-normal text-sm shadow-xs hover:bg-neutral-50 transition-colors cursor-pointer"
             >
               Filters
               <Funnel className="h-3.5 w-3.5 ms-2" />

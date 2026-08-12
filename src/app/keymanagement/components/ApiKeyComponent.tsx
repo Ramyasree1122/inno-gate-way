@@ -83,6 +83,9 @@ export function ApiKeyComponent({
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
   const [providers, setProviders] = React.useState<Provider[]>([]);
 
+    const [searchQuery, setSearchQuery] = React.useState("");
+  
+
   // Modal states
   const [ApiKeyModalOpen, setApiKeyModalOpen] = React.useState(false);
   const [createApiKeyModalOpen, setCreateApiKeyModalOpen] =
@@ -119,6 +122,8 @@ export function ApiKeyComponent({
     }
   };
 
+  
+
   const fetchProviders = async () => {
     try {
       const response = await dashboardService.getProviders();
@@ -130,9 +135,11 @@ export function ApiKeyComponent({
     }
   };
 
-  const fetchApiKeys = async () => {
+  const fetchApiKeys = async (search="") => {
     try {
-      const res = await keymanagementService.getAllAPIkeys();
+              const params = search.trim() ? { search: search.trim() } : undefined;
+
+      const res = await keymanagementService.getAllAPIkeys(params);
       const keys = Array.isArray(res) ? res : (res?.data || Object.values(res || {}).find(Array.isArray) || []);
       setApiKeys(keys as ApiKey[]);
     } catch (error) {
@@ -140,9 +147,15 @@ export function ApiKeyComponent({
     }
   };
 
-  useEffect(() => {
-    fetchApiKeys();
-  }, []);
+    useEffect(() => {
+      const delay = searchQuery.trim() ? 1000 : 0;
+  
+      const timer = setTimeout(() => {
+        fetchApiKeys(searchQuery);
+      }, delay);
+  
+      return () => clearTimeout(timer);
+    }, [searchQuery]);
 
   const isFormValid =
     createForm.workspace_id !== "" &&
@@ -629,6 +642,8 @@ export function ApiKeyComponent({
               placeholder="Search workspaces,users and API keys..."
               className="text-xs font-normal text-[#737373]"
               containerClassName="rounded-md border-neutral-200 shadow-xs"
+                    value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <button
