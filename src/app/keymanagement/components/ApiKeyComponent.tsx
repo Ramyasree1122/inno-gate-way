@@ -72,7 +72,13 @@ const CopyButton = ({
   );
 };
 
-export function ApiKeyComponent() {
+export function ApiKeyComponent({
+  title,
+  containerClassName,
+}: {
+  title?: string;
+  containerClassName?: string;
+} = {}) {
   const [apiKeys, setApiKeys] = React.useState<ApiKey[]>([]);
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
   const [providers, setProviders] = React.useState<Provider[]>([]);
@@ -105,8 +111,9 @@ export function ApiKeyComponent() {
 
   const fetchWorkspaces = async () => {
     try {
-      const workspaces = await keymanagementService.getAllWorkspaces();
-      setWorkspaces(workspaces || []);
+      const res = await keymanagementService.getAllWorkspaces();
+      const list = Array.isArray(res) ? res : (res?.items || res?.data || Object.values(res || {}).find(Array.isArray) || []);
+      setWorkspaces(list);
     } catch (error) {
       console.error("Error fetching workspaces:", error);
     }
@@ -125,8 +132,9 @@ export function ApiKeyComponent() {
 
   const fetchApiKeys = async () => {
     try {
-      const apiKeys = await keymanagementService.getAllAPIkeys();
-      setApiKeys(apiKeys || []);
+      const res = await keymanagementService.getAllAPIkeys();
+      const keys = Array.isArray(res) ? res : (res?.data || Object.values(res || {}).find(Array.isArray) || []);
+      setApiKeys(keys as ApiKey[]);
     } catch (error) {
       console.error("Error fetching API keys:", error);
     }
@@ -445,7 +453,7 @@ export function ApiKeyComponent() {
                   className="flex items-center justify-between w-full rounded-md border border-neutral-200 px-3 py-2 text-sm bg-white focus-visible:outline-none shadow-xs shadow-neutral-200 cursor-pointer outline-none placeholder:text-neutral-500 "
                 >
                   <span className="text-neutral-950 text-sm font-normal ">
-                    {workspaces?.items?.find((ws) => ws.id === createForm.workspace_id)
+                    {workspaces?.find((ws) => ws.id === createForm.workspace_id)
                       ?.name || "Select Workspace"}
                   </span>
                   <ChevronDown className="h-4 w-4 text-neutral-950" />
@@ -454,7 +462,7 @@ export function ApiKeyComponent() {
                   align="start"
                   className="w-[var(--anchor-width)] bg-white border border-neutral-200 rounded-lg shadow-lg z-[100] p-1.5 max-h-60 overflow-y-auto placeholder:text-neutral-500 "
                 >
-                  {workspaces?.items?.map((ws) => (
+                  {workspaces?.map((ws) => (
                     <DropdownMenuItem
                       key={ws.id}
                       onClick={() =>
@@ -609,10 +617,12 @@ export function ApiKeyComponent() {
       )}
 
       {/* API Keys Section */}
-      <div className="bg-white rounded-lg p-3">
-        {/* <h3 className="text-xl font-semibold text-neutral-900 mb-4">
-          API keys
-        </h3> */}
+      <div className={containerClassName || "bg-white rounded-lg p-3"}>
+        {title && (
+          <h3 className="text-lg font-semibold text-neutral-900 mb-6">
+            {title}
+          </h3>
+        )}
         <div className="flex justify-between items-center w-full mb-4">
           <div className="w-72">
             <SearchInput
@@ -630,7 +640,7 @@ export function ApiKeyComponent() {
         </div>
 
         <CommonTable
-          data={apiKeys?.items}
+          data={apiKeys}
           columns={[
             { key: "workspace_name", title: "Workspace" },
             { key: "owner", title: "User Email" },
