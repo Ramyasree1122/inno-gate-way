@@ -526,7 +526,6 @@ export function ApiKeyComponent() {
                 popupClassName="bottom-full top-auto mb-2 shadow-xl z-50"
                 showActionButtons
                 showTime={true}
-                range
                 calendarTitle="Select Date & Time"
               />
             </div>
