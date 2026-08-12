@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Workspace } from "./WorkspaceComponent";
 import { CommonCalendar } from "@/components/common/CommonCalendar";
+import dayjs from "dayjs";
 
 export interface ApiKey {
   id: string;
@@ -110,8 +111,9 @@ export function ApiKeyComponent({
 
   const fetchWorkspaces = async () => {
     try {
-      const workspaces = await keymanagementService.getAllWorkspaces();
-      setWorkspaces(workspaces || []);
+      const res = await keymanagementService.getAllWorkspaces();
+      const list = Array.isArray(res) ? res : (res?.items || res?.data || Object.values(res || {}).find(Array.isArray) || []);
+      setWorkspaces(list);
     } catch (error) {
       console.error("Error fetching workspaces:", error);
     }
@@ -451,7 +453,7 @@ export function ApiKeyComponent({
                   className="flex items-center justify-between w-full rounded-md border border-neutral-200 px-3 py-2 text-sm bg-white focus-visible:outline-none shadow-xs shadow-neutral-200 cursor-pointer outline-none placeholder:text-neutral-500 "
                 >
                   <span className="text-neutral-950 text-sm font-normal ">
-                    {workspaces.find((ws) => ws.id === createForm.workspace_id)
+                    {workspaces?.find((ws) => ws.id === createForm.workspace_id)
                       ?.name || "Select Workspace"}
                   </span>
                   <ChevronDown className="h-4 w-4 text-neutral-950" />
@@ -460,7 +462,7 @@ export function ApiKeyComponent({
                   align="start"
                   className="w-[var(--anchor-width)] bg-white border border-neutral-200 rounded-lg shadow-lg z-[100] p-1.5 max-h-60 overflow-y-auto placeholder:text-neutral-500 "
                 >
-                  {workspaces.map((ws) => (
+                  {workspaces?.map((ws) => (
                     <DropdownMenuItem
                       key={ws.id}
                       onClick={() =>
@@ -525,7 +527,7 @@ export function ApiKeyComponent({
                 onChange={(val) =>
                   setCreateForm((prev) => ({
                     ...prev,
-                    expires_at: val ? val.toISOString() : "",
+                    expires_at: val ? dayjs(val).format() : ""
                   }))
                 }
                 placeholder="dd/mm/yyyy , --:-- --"

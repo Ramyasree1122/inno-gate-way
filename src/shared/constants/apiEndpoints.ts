@@ -22,4 +22,5 @@ export const API_ENDPOINTS = {
   GET_API_KEYS: "/api/api-keys",
   EXTEND_REGENERATE_CHANGE_DISABLE_DELETE_API_KEY: (apiKeyId: string) =>
     `/api/api-keys/${apiKeyId}`,
+  GET_HISTORY: "/api/request-logs",
 };

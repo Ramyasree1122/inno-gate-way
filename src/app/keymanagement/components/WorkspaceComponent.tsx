@@ -26,8 +26,9 @@ export function WorkspaceComponent() {
 
   const fetchWorkspaces = async () => {
     try {
-      const workspaces = await keymanagementService.getAllWorkspaces();
-      setWorkspaces(workspaces || []);
+      const res = await keymanagementService.getAllWorkspaces();
+      const list = Array.isArray(res) ? res : (res?.items || res?.data || Object.values(res || {}).find(Array.isArray) || []);
+      setWorkspaces(list);
     } catch (error) {
       console.error("Error fetching workspaces:", error);
     }
