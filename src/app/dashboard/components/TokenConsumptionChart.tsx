@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import dayjs from "dayjs";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CommonCalendar, formatDateRangeDisplay } from "@/components/common/CommonCalendar";
 
@@ -90,9 +90,26 @@ export default function TokenConsumptionChart() {
   const [rangeEnd, setRangeEnd] = useState<dayjs.Dayjs | null>(null);
 
   useEffect(() => {
+    if (selectedRange === "Custom range" && (!rangeStart || !rangeEnd)) {
+      return;
+    }
+
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await dashboardService.getDailyAnalytics();
+        let params: { range?: string; start_date?: string; end_date?: string } = {};
+        
+        if (selectedRange === "Today") {
+          // Do nothing, send no range parameter
+        } else if (selectedRange === "Last 7 days") {
+          params.range = "7d";
+        } else if (selectedRange === "Custom range" && rangeStart && rangeEnd) {
+          params.range = "custom";
+          params.start_date = rangeStart.toISOString();
+          params.end_date = rangeEnd.toISOString();
+        }
+
+        const response = await dashboardService.getDailyAnalytics(params);
         setData(response);
       } catch (error) {
         console.error("Failed to fetch daily analytics", error);
@@ -101,11 +118,7 @@ export default function TokenConsumptionChart() {
       }
     };
     fetchData();
-  }, []);
-
-  if (loading) {
-    return <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6 h-[400px] animate-pulse"></div>;
-  }
+  }, [selectedRange, rangeStart, rangeEnd]);
 
   const hasData = data && data.length > 0;
   const totalTokens = hasData ? data.reduce((sum, item) => sum + item.total_tokens, 0) : 0;
@@ -114,6 +127,11 @@ export default function TokenConsumptionChart() {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6 mb-6">
+      {loading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 backdrop-blur-sm">
+          <LoaderIcon className="w-8 h-8 animate-spin text-neutral-900" />
+        </div>
+      )}
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-lg font-semibold text-neutral-900 mb-4">Token Consumption</h2> 
@@ -197,7 +215,7 @@ export default function TokenConsumptionChart() {
             margin={{
               top: 10,
               right: 0,
-              left: -15,
+              left: 10,
               bottom: 0,
             }}
           >

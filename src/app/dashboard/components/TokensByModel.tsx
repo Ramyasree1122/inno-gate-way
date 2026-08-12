@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LoaderIcon } from "lucide-react";
 import { CommonTable } from "@/components/common/CommonTable";
 import { dashboardService, TokensByModelResponse } from "@/services/dashboardService";
 
@@ -9,14 +10,18 @@ const formatNumber = (value?: number | null) =>
 
 export default function TokensByModel() {
   const [rows, setRows] = useState<TokensByModelResponse[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const data = await dashboardService.getTokensByModel();
         setRows(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching tokens by model:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -25,6 +30,11 @@ export default function TokensByModel() {
 
   return (
     <div className="bg-white rounded-xl p-6 border border-neutral-200 mt-6 shadow-sm">
+      {loading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 backdrop-blur-sm">
+          <LoaderIcon className="w-8 h-8 animate-spin text-neutral-900" />
+        </div>
+      )}
       <h3 className="text-lg font-semibold text-neutral-900 mb-6">Tokens by model</h3>
 
       <CommonTable

@@ -39,8 +39,11 @@ export const dashboardService = {
   getDashboardSummary: async (): Promise<DashboardSummaryResponse> => {
     return get<DashboardSummaryResponse>(API_ENDPOINTS.DASHBOARD_SUMMARY);
   },
-  getDailyAnalytics: async (): Promise<DailyAnalyticsResponse[]> => {
-    return get<DailyAnalyticsResponse[]>(API_ENDPOINTS.DASHBOARD_DAILY);
+  getDailyAnalytics: async (params?: { range?: string; start_date?: string; end_date?: string }): Promise<DailyAnalyticsResponse[]> => {
+    return get<DailyAnalyticsResponse[]>(API_ENDPOINTS.DASHBOARD_DAILY, { params });
+  },
+  getLatencyAnalytics: async (params?: { range?: string; start_date?: string; end_date?: string }): Promise<DailyAnalyticsResponse[]> => {
+    return get<DailyAnalyticsResponse[]>(API_ENDPOINTS.DASHBOARD_LATENCY, { params });
   },
   getTopUsers: async (period: string = "all"): Promise<TopUserResponse[]> => {
     return get<TopUserResponse[]>(`${API_ENDPOINTS.DASHBOARD_TOP_USERS}?period=${period}`);
