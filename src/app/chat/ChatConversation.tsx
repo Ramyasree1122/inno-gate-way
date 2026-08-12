@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Code, Check, CodeXml } from "lucide-react";
+import { Copy, Code, Check, CodeXml, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 
@@ -200,7 +200,8 @@ export default function ChatConversation({ messages, isGenerating }: ChatConvers
       })}
       {isGenerating && (
         <div className="flex justify-start">
-          <div className="bg-[#F5F5F5] px-4 py-2 rounded-xl max-w-full">
+          <div className="bg-[#F5F5F5] px-4 py-2 rounded-xl max-w-full flex items-center space-x-2">
+            <Loader2 className="w-4 h-4 animate-spin text-neutral-500" />
             <p className="text-sm font-normal text-neutral-900">
               Generating...
             </p>

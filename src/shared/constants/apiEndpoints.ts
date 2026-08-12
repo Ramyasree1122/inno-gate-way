@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
   CHAT_COMPLETIONS: "/api/v1/chat/completions",
   DASHBOARD_SUMMARY: "/api/analytics/summary",
   DASHBOARD_DAILY: "/api/analytics/daily",
+  DASHBOARD_LATENCY: "/api/analytics/latency",
   DASHBOARD_TOP_USERS: "/api/analytics/top-users",
   DASHBOARD_TOKENS_BY_MODEL: "/api/analytics/tokens-by-model",
   GET_WORKSPACES: "/api/workspaces",

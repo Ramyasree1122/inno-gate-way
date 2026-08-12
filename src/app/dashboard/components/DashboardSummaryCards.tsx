@@ -6,6 +6,7 @@ import {
   DashboardSummaryResponse,
 } from "@/services/dashboardService";
 import SvgIcon from "@/components/svgIcons";
+import { LoaderIcon } from "lucide-react";
 
 export default function DashboardSummaryCards() {
   const [data, setData] = useState<DashboardSummaryResponse | null>(null);
@@ -25,19 +26,6 @@ export default function DashboardSummaryCards() {
 
     fetchSummary();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="bg-white p-4 rounded-xl border border-[#E5E5E5] h-20 animate-pulse"
-          ></div>
-        ))}
-      </div>
-    );
-  }
 
   const cards = [
     {
@@ -82,7 +70,13 @@ export default function DashboardSummaryCards() {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+    <>
+      {loading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 backdrop-blur-sm">
+          <LoaderIcon className="w-8 h-8 animate-spin text-neutral-900" />
+        </div>
+      )}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
       {cards.map((card, index) => (
         <div
           key={index}
@@ -106,5 +100,6 @@ export default function DashboardSummaryCards() {
         </div>
       ))}
     </div>
+    </>
   );
 }

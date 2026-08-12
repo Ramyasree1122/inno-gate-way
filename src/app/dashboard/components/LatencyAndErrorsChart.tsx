@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { LoaderIcon } from "lucide-react";
 import {
   dashboardService,
   DailyAnalyticsResponse,
@@ -57,38 +58,40 @@ const RightAxisLabel = ({ viewBox }: any) => {
 export default function LatencyAndErrorsChart() {
   const [data, setData] = useState<DailyAnalyticsResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRange, setSelectedRange] = useState("Last 7 days");
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await dashboardService.getDailyAnalytics();
+        const range = selectedRange === "Last 7 days" ? "7d" : "3d";
+        const response = await dashboardService.getLatencyAnalytics({ range });
         setData(response);
       } catch (error) {
-        console.error("Failed to fetch daily analytics", error);
+        console.error("Failed to fetch latency analytics", error);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6 h-[400px] animate-pulse"></div>
-    );
-  }
+  }, [selectedRange]);
 
   const hasData = data && data.length > 0;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-[#E5E5E5] p-6 h-full flex flex-col">
+      {loading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 backdrop-blur-sm">
+          <LoaderIcon className="w-8 h-8 animate-spin text-neutral-900" />
+        </div>
+      )}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold text-neutral-900">
           Latency and errors
         </h2>
 
         <div className="w-[150px] shrink-0">
-          <Select defaultValue="Last 7 days">
+          <Select value={selectedRange} onValueChange={(val) => { if (val) setSelectedRange(val); }}>
             <SelectTrigger className="w-full h-8 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md">
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
