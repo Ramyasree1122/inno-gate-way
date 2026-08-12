@@ -1,5 +1,6 @@
 import { axiosInstance } from "@/lib/axios";
 import { API_ENDPOINTS } from "@/shared/constants/apiEndpoints";
+import { GenerateAPIKeyPayload } from "@/shared/types/auth.types";
 
 export const keymanagementService = {
   /** Workspace Management */
@@ -59,7 +60,7 @@ export const keymanagementService = {
   changeWorkspace: async (apiKeyId: string, workspaceId: string) => {
     try {
       const response = await axiosInstance.patch(
-        API_ENDPOINTS.CHANGE_DISABLE_DELETE_API_KEY(apiKeyId),
+        API_ENDPOINTS.EXTEND_REGENERATE_CHANGE_DISABLE_DELETE_API_KEY(apiKeyId),
         { workspace_id: workspaceId },
       );
       return response.status >= 200 && response.status < 300;
@@ -71,8 +72,8 @@ export const keymanagementService = {
   extendKeyDuration: async (apiKeyId: string, days: number = 30) => {
     try {
       const response = await axiosInstance.post(
-        API_ENDPOINTS.EXTEND_API_KEY_DURATION(apiKeyId),
-        { days }
+        `${API_ENDPOINTS.EXTEND_REGENERATE_CHANGE_DISABLE_DELETE_API_KEY(apiKeyId)}/extend`,
+        { days },
       );
       return response.status >= 200 && response.status < 300;
     } catch (error) {
@@ -83,7 +84,7 @@ export const keymanagementService = {
   regenerateKey: async (apiKeyId: string) => {
     try {
       const response = await axiosInstance.post(
-        API_ENDPOINTS.REGENERATE_API_KEY(apiKeyId)
+        `${API_ENDPOINTS.EXTEND_REGENERATE_CHANGE_DISABLE_DELETE_API_KEY(apiKeyId)}/regenerate`,
       );
       return response.status >= 200 && response.status < 300;
     } catch (error) {
@@ -94,8 +95,8 @@ export const keymanagementService = {
   disableKey: async (apiKeyId: string, isActive: boolean) => {
     try {
       const response = await axiosInstance.patch(
-        API_ENDPOINTS.CHANGE_DISABLE_DELETE_API_KEY(apiKeyId),
-        { is_active: isActive }
+        `${API_ENDPOINTS.EXTEND_REGENERATE_CHANGE_DISABLE_DELETE_API_KEY(apiKeyId)}`,
+        { is_active: isActive },
       );
       return response.status >= 200 && response.status < 300;
     } catch (error) {
@@ -106,12 +107,20 @@ export const keymanagementService = {
   deleteKey: async (apiKeyId: string) => {
     try {
       const response = await axiosInstance.delete(
-        API_ENDPOINTS.CHANGE_DISABLE_DELETE_API_KEY(apiKeyId),
+        `${API_ENDPOINTS.EXTEND_REGENERATE_CHANGE_DISABLE_DELETE_API_KEY(apiKeyId)}`,
       );
       return response.status >= 200 && response.status < 300;
     } catch (error) {
       console.error("Error deleting API key:", error);
       throw error;
     }
+  },
+  generateNewAPIKey: async (payload: GenerateAPIKeyPayload) => {
+    const response = await axiosInstance.post(
+      API_ENDPOINTS.GET_API_KEYS,
+      payload,
+    );
+
+    return response.data;
   },
 };

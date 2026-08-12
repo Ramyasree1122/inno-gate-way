@@ -20,11 +20,7 @@ export const API_ENDPOINTS = {
   DASHBOARD_TOKENS_BY_MODEL: "/api/analytics/tokens-by-model",
   GET_WORKSPACES: "/api/workspaces",
   GET_API_KEYS: "/api/api-keys",
-  EXTEND_API_KEY_DURATION: (apiKeyId: string) =>
-    `/api/api-keys/${apiKeyId}/extend`,
-  REGENERATE_API_KEY: (apiKeyId: string) =>
-    `/api/api-keys/${apiKeyId}/regenerate`,
-  CHANGE_DISABLE_DELETE_API_KEY: (apiKeyId: string) =>
+  EXTEND_REGENERATE_CHANGE_DISABLE_DELETE_API_KEY: (apiKeyId: string) =>
     `/api/api-keys/${apiKeyId}`,
   GET_HISTORY: "/api/request-logs",
 };

@@ -49,7 +49,7 @@ export function CommonModal({
       <div
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "relative z-50 w-full max-w-md transform overflow-hidden rounded-xl bg-white p-4 shadow-2xl transition-all duration-300 ease-out border border-neutral-100",
+          "relative z-50 w-full max-w-md transform rounded-xl bg-white p-4 shadow-2xl transition-all duration-300 ease-out border border-neutral-100",
           className
         )}
       >
