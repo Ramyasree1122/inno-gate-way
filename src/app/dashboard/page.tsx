@@ -3,7 +3,7 @@ import DashboardSummaryCards from "./components/DashboardSummaryCards";
 import TokenConsumptionChart from "./components/TokenConsumptionChart";
 import LatencyAndErrorsChart from "./components/LatencyAndErrorsChart";
 import TopTokenConsumers from "./components/TopTokenConsumers";
-import LatestAPIKeys from "./components/LatestAPIKeys";
+import { ApiKeyComponent } from "@/app/keymanagement/components/ApiKeyComponent";
 import TokensByModel from "./components/TokensByModel";
 import AvailableModels from "./components/AvailableModels";
 
@@ -21,7 +21,10 @@ export default function DashboardPage() {
           <TopTokenConsumers />
         </div>
       </div>
-      <LatestAPIKeys />
+      <ApiKeyComponent 
+        title="Latest API Keys"
+        containerClassName="bg-white rounded-xl p-6 border border-neutral-200 mt-6 shadow-sm"
+      />
       <AvailableModels />
       <TokensByModel />
     </div>

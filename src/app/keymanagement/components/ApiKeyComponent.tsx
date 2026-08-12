@@ -71,7 +71,13 @@ const CopyButton = ({
   );
 };
 
-export function ApiKeyComponent() {
+export function ApiKeyComponent({
+  title,
+  containerClassName,
+}: {
+  title?: string;
+  containerClassName?: string;
+} = {}) {
   const [apiKeys, setApiKeys] = React.useState<ApiKey[]>([]);
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
   const [providers, setProviders] = React.useState<Provider[]>([]);
@@ -124,8 +130,29 @@ export function ApiKeyComponent() {
 
   const fetchApiKeys = async () => {
     try {
-      const apiKeys = await keymanagementService.getAllAPIkeys();
-      setApiKeys(apiKeys || []);
+      const response = await keymanagementService.getAllAPIkeys();
+      
+      let keysArray: any[] = [];
+      if (Array.isArray(response)) {
+        keysArray = response;
+      } else if (response && typeof response === 'object') {
+        // Try standard wrappers
+        if (Array.isArray(response.data)) {
+          keysArray = response.data;
+        } else if (Array.isArray(response.items)) {
+          keysArray = response.items;
+        } else if (Array.isArray(response.api_keys)) {
+          keysArray = response.api_keys;
+        } else {
+          // Fallback: find any array property in the object
+          const possibleArray = Object.values(response).find(val => Array.isArray(val));
+          if (possibleArray) {
+            keysArray = possibleArray as any[];
+          }
+        }
+      }
+      
+      setApiKeys(keysArray);
     } catch (error) {
       console.error("Error fetching API keys:", error);
     }
@@ -608,10 +635,12 @@ export function ApiKeyComponent() {
       )}
 
       {/* API Keys Section */}
-      <div className="bg-white rounded-lg p-3">
-        {/* <h3 className="text-xl font-semibold text-neutral-900 mb-4">
-          API keys
-        </h3> */}
+      <div className={containerClassName || "bg-white rounded-lg p-3"}>
+        {title && (
+          <h3 className="text-lg font-semibold text-neutral-900 mb-6">
+            {title}
+          </h3>
+        )}
         <div className="flex justify-between items-center w-full mb-4">
           <div className="w-72">
             <SearchInput
