@@ -71,7 +71,13 @@ const CopyButton = ({
   );
 };
 
-export function ApiKeyComponent() {
+export function ApiKeyComponent({
+  title,
+  containerClassName,
+}: {
+  title?: string;
+  containerClassName?: string;
+} = {}) {
   const [apiKeys, setApiKeys] = React.useState<ApiKey[]>([]);
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
   const [providers, setProviders] = React.useState<Provider[]>([]);
@@ -124,8 +130,9 @@ export function ApiKeyComponent() {
 
   const fetchApiKeys = async () => {
     try {
-      const apiKeys = await keymanagementService.getAllAPIkeys();
-      setApiKeys(apiKeys || []);
+      const res = await keymanagementService.getAllAPIkeys();
+      const keys = Array.isArray(res) ? res : (res?.data || Object.values(res || {}).find(Array.isArray) || []);
+      setApiKeys(keys as ApiKey[]);
     } catch (error) {
       console.error("Error fetching API keys:", error);
     }
@@ -526,7 +533,6 @@ export function ApiKeyComponent() {
                 popupClassName="bottom-full top-auto mb-2 shadow-xl z-50"
                 showActionButtons
                 showTime={true}
-                range
                 calendarTitle="Select Date & Time"
               />
             </div>
@@ -609,10 +615,12 @@ export function ApiKeyComponent() {
       )}
 
       {/* API Keys Section */}
-      <div className="bg-white rounded-lg p-3">
-        {/* <h3 className="text-xl font-semibold text-neutral-900 mb-4">
-          API keys
-        </h3> */}
+      <div className={containerClassName || "bg-white rounded-lg p-3"}>
+        {title && (
+          <h3 className="text-lg font-semibold text-neutral-900 mb-6">
+            {title}
+          </h3>
+        )}
         <div className="flex justify-between items-center w-full mb-4">
           <div className="w-72">
             <SearchInput

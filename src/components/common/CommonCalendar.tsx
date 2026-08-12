@@ -30,18 +30,18 @@ function normalizeDate(value?: any) {
   if (!value) return null;
   const val = Array.isArray(value) ? value[0] : value;
   if (!val) return null;
-  return dayjs(val).isValid() ? dayjs(val).startOf("day") : null;
+  return dayjs(val).isValid() ? dayjs(val) : null;
 }
 
 function normalizeRange(value?: any): [dayjs.Dayjs | null, dayjs.Dayjs | null] {
   if (!Array.isArray(value)) return [null, null];
   const start =
     value[0] && dayjs(value[0]).isValid()
-      ? dayjs(value[0]).startOf("day")
+      ? dayjs(value[0])
       : null;
   const end =
     value[1] && dayjs(value[1]).isValid()
-      ? dayjs(value[1]).startOf("day")
+      ? dayjs(value[1])
       : null;
   return [start, end];
 }
@@ -93,19 +93,34 @@ export function CommonCalendar({
     React.useState<dayjs.Dayjs>(initialMonth);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
 
-  const [hour, setHour] = React.useState("00");
-const [minute, setMinute] = React.useState("00");
-const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
+  const initialDayjs = range ? normalizeRange(value)[0] : normalizeDate(value);
+  const defaultHour = initialDayjs ? initialDayjs.format("hh") : "12";
+  const defaultMinute = initialDayjs ? initialDayjs.format("mm") : "00";
+  const defaultAmpm = initialDayjs ? (initialDayjs.format("A") as "AM" | "PM") : "AM";
+
+  const [hour, setHour] = React.useState(defaultHour);
+  const [minute, setMinute] = React.useState(defaultMinute);
+  const [ampm, setAmpm] = React.useState<"AM" | "PM">(defaultAmpm);
 
   React.useEffect(() => {
     if (range) {
       const parsed = normalizeRange(value);
       setSelectedRange(parsed);
-      if (parsed[0]) setCurrentMonth(parsed[0].startOf("month"));
+      if (parsed[0]) {
+        setCurrentMonth(parsed[0].startOf("month"));
+        setHour(parsed[0].format("hh"));
+        setMinute(parsed[0].format("mm"));
+        setAmpm(parsed[0].format("A") as "AM" | "PM");
+      }
     } else {
       const parsed = normalizeDate(value);
       setSelectedDate(parsed);
-      if (parsed) setCurrentMonth(parsed.startOf("month"));
+      if (parsed) {
+        setCurrentMonth(parsed.startOf("month"));
+        setHour(parsed.format("hh"));
+        setMinute(parsed.format("mm"));
+        setAmpm(parsed.format("A") as "AM" | "PM");
+      }
     }
   }, [value, range]);
 
@@ -125,9 +140,9 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
   }, [inline]);
 
   const selectedLabel = range
-    ? formatDateRangeDisplay(selectedRange[0], selectedRange[1])
+    ? formatDateRangeDisplay(selectedRange[0], selectedRange[1], showTime ? "DD/MM/YYYY , hh:mm A" : "MMM D, YYYY")
     : selectedDate
-      ? selectedDate.format("MMM D, YYYY")
+      ? selectedDate.format(showTime ? "DD/MM/YYYY , hh:mm A" : "MMM D, YYYY")
       : "";
 
   const daysInMonth = currentMonth.daysInMonth();
@@ -161,6 +176,14 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
     return days;
   }, [beginningDay, currentMonth, daysInMonth, minDate, maxDate, startOfMonth]);
 
+  const applyTime = (date: dayjs.Dayjs) => {
+    if (!showTime) return date.startOf("day");
+    let h = parseInt(hour || "12", 10);
+    if (h === 12 && ampm === "AM") h = 0;
+    else if (h < 12 && ampm === "PM") h += 12;
+    return date.hour(h).minute(parseInt(minute || "0", 10)).second(0);
+  };
+
   const handleDaySelect = (date: dayjs.Dayjs) => {
     if (
       (minDate && date.isBefore(dayjs(minDate).startOf("day"))) ||
@@ -173,18 +196,18 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
       if (!selectedRange[0] || (selectedRange[0] && selectedRange[1])) {
         setSelectedRange([date, null]);
         if (!showActionButtons) {
-          onChange?.([date.toDate(), null]);
+          onChange?.([applyTime(date).toDate(), null]);
         }
       } else {
         if (date.isBefore(selectedRange[0])) {
           setSelectedRange([date, null]);
           if (!showActionButtons) {
-            onChange?.([date.toDate(), null]);
+            onChange?.([applyTime(date).toDate(), null]);
           }
         } else {
           setSelectedRange([selectedRange[0], date]);
           if (!showActionButtons) {
-            onChange?.([selectedRange[0].toDate(), date.toDate()]);
+            onChange?.([applyTime(selectedRange[0]).toDate(), applyTime(date).toDate()]);
             if (!inline) setIsOpen(false);
           }
           setHoverDate(null);
@@ -193,7 +216,7 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
     } else {
       setSelectedDate(date);
       if (!showActionButtons) {
-        onChange?.(date.toDate());
+        onChange?.(applyTime(date).toDate());
         if (!inline) setIsOpen(false);
       }
     }
@@ -202,14 +225,14 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
   const handleApply = () => {
     if (range) {
       if (selectedRange[0] && selectedRange[1]) {
-        const val = [selectedRange[0].toDate(), selectedRange[1].toDate()];
+        const val = [applyTime(selectedRange[0]).toDate(), applyTime(selectedRange[1]).toDate()];
         onChange?.(val);
         onApply?.(val);
         if (!inline) setIsOpen(false);
       }
     } else {
       if (selectedDate) {
-        const val = selectedDate.toDate();
+        const val = applyTime(selectedDate).toDate();
         onChange?.(val);
         onApply?.(val);
         if (!inline) setIsOpen(false);
@@ -335,16 +358,17 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
             <input
               type="text"
               value={hour}
-                onChange={(e) => {
-          const value = e.target.value.replace(/\D/g, "");
-
-          if (value === "" || Number(value) <= 12) {
-            setHour(value);
-          }
-        }}
-
-              maxLength={2}
-              placeholder="00"
+              onChange={(e) => {
+                let val = e.target.value.replace(/\D/g, "");
+                if (val.length > 2) val = val.slice(-2);
+                if (val !== "" && Number(val) > 12) val = val.slice(-1);
+                setHour(val);
+              }}
+              onBlur={() => {
+                if (hour !== "") setHour(hour.padStart(2, "0"));
+                else setHour("12");
+              }}
+              placeholder="12"
               className="w-[52px] h-9 rounded-md border border-neutral-300 bg-white px-2 text-center text-sm font-medium text-neutral-900 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-200"
             />
 
@@ -354,13 +378,16 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
             <input
               type="text"
               value={minute}
- onChange={(e) => {
-          const value = e.target.value.replace(/\D/g, "");
-
-          if (value === "" || Number(value) <= 59) {
-            setMinute(value);
-          }
-        }}              maxLength={2}
+              onChange={(e) => {
+                let val = e.target.value.replace(/\D/g, "");
+                if (val.length > 2) val = val.slice(-2);
+                if (val !== "" && Number(val) > 59) val = val.slice(-1);
+                setMinute(val);
+              }}
+              onBlur={() => {
+                if (minute !== "") setMinute(minute.padStart(2, "0"));
+                else setMinute("00");
+              }}
               placeholder="00"
               className="w-[52px] h-9 rounded-md border border-neutral-300 bg-white px-2 text-center text-sm font-medium text-neutral-900 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-200"
             />
