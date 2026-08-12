@@ -26,11 +26,11 @@ export interface CommonCalendarProps {
 
 const WEEK_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-function normalizeDate(value?: any) {
+function normalizeDate(value?: any, keepTime?: boolean) {
   if (!value) return null;
   const val = Array.isArray(value) ? value[0] : value;
   if (!val) return null;
-  return dayjs(val).isValid() ? dayjs(val).startOf("day") : null;
+  return dayjs(val).isValid() ? (keepTime ? dayjs(val) : dayjs(val).startOf("day")) : null;
 }
 
 function normalizeRange(value?: any): [dayjs.Dayjs | null, dayjs.Dayjs | null] {
@@ -79,12 +79,16 @@ export function CommonCalendar({
 }: CommonCalendarProps) {
   const [isOpen, setIsOpen] = React.useState(inline || false);
   const [selectedDate, setSelectedDate] = React.useState<dayjs.Dayjs | null>(
-    normalizeDate(value),
+    normalizeDate(value, showTime),
   );
   const [selectedRange, setSelectedRange] = React.useState<
     [dayjs.Dayjs | null, dayjs.Dayjs | null]
   >(normalizeRange(value));
   const [hoverDate, setHoverDate] = React.useState<dayjs.Dayjs | null>(null);
+  const initialDateRef = React.useRef<dayjs.Dayjs | null>(normalizeDate(value, showTime));
+  const initialRangeRef = React.useRef<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null]
+  >(normalizeRange(value));
 
   const initialMonth = range
     ? (selectedRange[0] ?? dayjs().startOf("month"))
@@ -94,20 +98,50 @@ export function CommonCalendar({
   const containerRef = React.useRef<HTMLDivElement | null>(null);
 
   const [hour, setHour] = React.useState("00");
-const [minute, setMinute] = React.useState("00");
-const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
+  const [minute, setMinute] = React.useState("00");
+  const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
+
+  const getSelectedDateTime = (date: dayjs.Dayjs | null) => {
+    if (!date) return null;
+    if (!showTime) return date;
+
+    let h = parseInt(hour || "0", 10);
+    const m = parseInt(minute || "0", 10);
+
+    if (ampm === "PM" && h < 12) {
+      h += 12;
+    } else if (ampm === "AM" && h === 12) {
+      h = 0;
+    }
+
+    return date.hour(h).minute(m).second(0).millisecond(0);
+  };
 
   React.useEffect(() => {
     if (range) {
       const parsed = normalizeRange(value);
       setSelectedRange(parsed);
+      initialRangeRef.current = parsed;
       if (parsed[0]) setCurrentMonth(parsed[0].startOf("month"));
     } else {
-      const parsed = normalizeDate(value);
+      const parsed = normalizeDate(value, showTime);
       setSelectedDate(parsed);
-      if (parsed) setCurrentMonth(parsed.startOf("month"));
+      initialDateRef.current = parsed;
+      if (parsed) {
+        setCurrentMonth(parsed.startOf("month"));
+        if (showTime) {
+          let h = parsed.hour();
+          const m = parsed.minute();
+          const period = h >= 12 ? "PM" : "AM";
+          if (h > 12) h -= 12;
+          if (h === 0) h = 12;
+          setHour(String(h).padStart(2, "0"));
+          setMinute(String(m).padStart(2, "0"));
+          setAmpm(period);
+        }
+      }
     }
-  }, [value, range]);
+  }, [value, range, showTime]);
 
   React.useEffect(() => {
     if (inline) return;
@@ -127,8 +161,50 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
   const selectedLabel = range
     ? formatDateRangeDisplay(selectedRange[0], selectedRange[1])
     : selectedDate
-      ? selectedDate.format("MMM D, YYYY")
+      ? selectedDate.format(showTime ? "MMM D, YYYY h:mm A" : "MMM D, YYYY")
       : "";
+
+  const hasSelectedValue = range
+    ? !!(selectedRange[0] || selectedRange[1])
+    : !!selectedDate;
+
+  const isChanged = () => {
+    if (range) {
+      const initialStart = initialRangeRef.current[0];
+      const initialEnd = initialRangeRef.current[1];
+      const currentStart = selectedRange[0];
+      const currentEnd = selectedRange[1];
+
+      const startSame =
+        (!initialStart && !currentStart) ||
+        (!!initialStart &&
+          !!currentStart &&
+          initialStart.isSame(currentStart, "day"));
+      const endSame =
+        (!initialEnd && !currentEnd) ||
+        (!!initialEnd && !!currentEnd && initialEnd.isSame(currentEnd, "day"));
+
+      return !(startSame && endSame);
+    } else {
+      const initialDate = initialDateRef.current;
+      const currentDate = getSelectedDateTime(selectedDate);
+
+      if (!initialDate && !currentDate) return false;
+      if (!initialDate || !currentDate) return true;
+
+      if (showTime) {
+        return !initialDate.isSame(currentDate, "minute");
+      }
+      return !initialDate.isSame(currentDate, "day");
+    }
+  };
+
+  const isValidSelection = range
+    ? (selectedRange[0] === null && selectedRange[1] === null) ||
+      (selectedRange[0] !== null && selectedRange[1] !== null)
+    : true;
+
+  const isApplyDisabled = !isChanged() || !isValidSelection;
 
   const daysInMonth = currentMonth.daysInMonth();
   const startOfMonth = currentMonth.startOf("month");
@@ -201,34 +277,39 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
 
   const handleApply = () => {
     if (range) {
-      if (selectedRange[0] && selectedRange[1]) {
-        const val = [selectedRange[0].toDate(), selectedRange[1].toDate()];
-        onChange?.(val);
-        onApply?.(val);
-        if (!inline) setIsOpen(false);
-      }
+      const val =
+        selectedRange[0] && selectedRange[1]
+          ? [selectedRange[0].toDate(), selectedRange[1].toDate()]
+          : null;
+      onChange?.(val);
+      onApply?.(val);
+      if (!inline) setIsOpen(false);
     } else {
-      if (selectedDate) {
-        const val = selectedDate.toDate();
-        onChange?.(val);
-        onApply?.(val);
-        if (!inline) setIsOpen(false);
-      }
+      const finalDate = getSelectedDateTime(selectedDate);
+      const val = finalDate ? finalDate.toDate() : null;
+      onChange?.(val);
+      onApply?.(val);
+      if (!inline) setIsOpen(false);
     }
   };
 
   const handleCancel = () => {
     if (range) {
-      const parsed = normalizeRange(value);
-      setSelectedRange(parsed);
-      if (parsed[0]) setCurrentMonth(parsed[0].startOf("month"));
+      setSelectedRange(initialRangeRef.current);
+      if (initialRangeRef.current[0])
+        setCurrentMonth(initialRangeRef.current[0].startOf("month"));
     } else {
-      const parsed = normalizeDate(value);
-      setSelectedDate(parsed);
-      if (parsed) setCurrentMonth(parsed.startOf("month"));
+      setSelectedDate(initialDateRef.current);
+      if (initialDateRef.current)
+        setCurrentMonth(initialDateRef.current.startOf("month"));
     }
     onCancel?.();
     if (!inline) setIsOpen(false);
+  };
+
+  const handleReset = () => {
+    setSelectedDate(null);
+    setSelectedRange([null, null]);
   };
 
   const calendarContent = (
@@ -398,11 +479,24 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
       )}
 
       {showActionButtons && (
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={!hasSelectedValue}
+            className={cn(
+              "rounded-md px-4 py-1.5 text-xs font-medium transition-colors",
+              hasSelectedValue
+                ? "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 cursor-pointer"
+                : "bg-neutral-50 text-neutral-400 cursor-not-allowed opacity-50",
+            )}
+          >
+            Reset
+          </button>
           <button
             type="button"
             onClick={handleCancel}
-            className="rounded-md bg-neutral-100 px-4 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200"
+            className="rounded-md bg-neutral-100 px-4 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200 cursor-pointer"
           >
             Cancel
           </button>
@@ -411,13 +505,11 @@ const [ampm, setAmpm] = React.useState<"AM" | "PM">("AM");
             onClick={handleApply}
             className={cn(
               "rounded-md px-4 py-1.5 text-xs font-medium text-white hover:opacity-90",
-              (range ? selectedRange[0] && selectedRange[1] : selectedDate)
-                ? "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)]"
+              !isApplyDisabled
+                ? "bg-gradient-to-br from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] cursor-pointer"
                 : "bg-neutral-500 cursor-not-allowed opacity-50",
             )}
-            disabled={
-              range ? !selectedRange[0] || !selectedRange[1] : !selectedDate
-            }
+            disabled={isApplyDisabled}
           >
             Apply
           </button>

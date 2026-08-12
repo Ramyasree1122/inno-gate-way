@@ -240,7 +240,7 @@ export function WorkspaceComponent() {
         </div>
 
         <CommonTable
-          data={workspaces}
+          data={workspaces?.items}
           columns={[
             { key: "name", title: "Workspace" },
             { key: "created_by", title: "Created by" },

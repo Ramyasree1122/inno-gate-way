@@ -4,25 +4,119 @@ import { CommonTable } from "@/components/common/CommonTable";
 import { SearchInput } from "@/components/common/SearchInput";
 import { historyService } from "@/services/historyService";
 import { useEffect, useState, useRef } from "react";
-import { CalendarDays, Filter } from "lucide-react";
+import { Funnel } from "lucide-react";
 import dayjs from "dayjs";
+import { CommonModal } from "@/components/common/CommonModal";
+import { cn } from "@/lib/utils";
+import { API_ENDPOINTS } from "@/shared/constants/apiEndpoints";
+import { axiosInstance } from "@/lib/axios";
+
+interface Model {
+  id: string;
+  display_name?: string;
+}
+
+interface Provider {
+  id?: string;
+  name?: string;
+  models?: Model[];
+}
 
 const HistoryComponent = () => {
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [startDate, setStartDate] = useState<dayjs.Dayjs | null>(null);
-  const [endDate, setEndDate] = useState<dayjs.Dayjs | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
   const calendarRef = useRef<HTMLDivElement | null>(null);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  const fetchHistory = async () => {
+  // Consolidated Filter states
+  interface FilterState {
+    startDate: dayjs.Dayjs | null;
+    endDate: dayjs.Dayjs | null;
+    selectedModels: string[];
+  }
+
+  const [filters, setFilters] = useState<FilterState>({
+    startDate: null,
+    endDate: null,
+    selectedModels: [],
+  });
+
+  const [tempFilters, setTempFilters] = useState<FilterState>({
+    startDate: null,
+    endDate: null,
+    selectedModels: [],
+  });
+
+  const [providers, setProviders] = useState<Provider[]>([]);
+
+  const fetchHistory = async (currentFilters?: FilterState) => {
     try {
-      const data = await historyService.getHistory();
+      const params: Record<string, any> = {};
+      if (currentFilters) {
+        if (currentFilters.startDate) {
+          params.start_date = currentFilters.startDate
+            .startOf("day")
+            .toISOString();
+        }
+        if (currentFilters.endDate) {
+          params.end_date = currentFilters.endDate.endOf("day").toISOString();
+        }
+        if (currentFilters.selectedModels.length > 0) {
+          params.model = currentFilters.selectedModels;
+        }
+      }
+      const data = await historyService.getHistory(params);
       setHistoryData(data || []);
     } catch (error) {
-      console.error("Error fetching admin users:", error);
+      console.error("Error fetching history:", error);
     }
   };
+
+  const openFilterModal = () => {
+    setTempFilters(filters);
+    setIsFilterModalOpen(true);
+  };
+
+  const handleToggleModel = (modelId: string) => {
+    setTempFilters((prev) => ({
+      ...prev,
+      selectedModels: prev.selectedModels.includes(modelId)
+        ? prev.selectedModels.filter((id) => id !== modelId)
+        : [...prev.selectedModels, modelId],
+    }));
+  };
+
+  const handleApply = () => {
+    setFilters(tempFilters);
+    fetchHistory(tempFilters);
+    setIsFilterModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsFilterModalOpen(false);
+  };
+
+  const handleReset = () => {
+    setTempFilters({
+      startDate: null,
+      endDate: null,
+      selectedModels: [],
+    });
+  };
+
+  useEffect(() => {
+    if (!isFilterModalOpen) return;
+
+    const fetchProviders = async () => {
+      try {
+        const response = await axiosInstance.get(API_ENDPOINTS.AUTH.PROVIDERS);
+        setProviders(response?.data);
+      } catch (error) {
+        console.error("Error fetching providers:", error);
+      }
+    };
+    fetchProviders();
+  }, [isFilterModalOpen]);
 
   useEffect(() => {
     fetchHistory();
@@ -30,8 +124,11 @@ const HistoryComponent = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target as Node)
+      ) {
+        setIsFilterModalOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -48,38 +145,91 @@ const HistoryComponent = () => {
     }
 
     // 2. Date range filter
-    if (startDate || endDate) {
+    if (filters.startDate || filters.endDate) {
       if (!item.created_at) return false;
-      
+
       // Clean up format like "15th Jun, 11:44:15" -> "15 Jun, 11:44:15"
       let cleanDateStr = String(item.created_at);
       cleanDateStr = cleanDateStr.replace(/(\d+)(st|nd|rd|th)/, "$1");
-      
-      const year = startDate ? startDate.year() : dayjs().year();
+
+      const year = filters.startDate
+        ? filters.startDate.year()
+        : dayjs().year();
       const parsedDate = dayjs(`${cleanDateStr}, ${year}`);
-      
+
       if (parsedDate.isValid()) {
-        if (startDate && parsedDate.isBefore(startDate.startOf("day"))) {
+        if (
+          filters.startDate &&
+          parsedDate.isBefore(filters.startDate.startOf("day"))
+        ) {
           return false;
         }
-        if (endDate && parsedDate.isAfter(endDate.endOf("day"))) {
+        if (
+          filters.endDate &&
+          parsedDate.isAfter(filters.endDate.endOf("day"))
+        ) {
           return false;
         }
       } else {
         const directParsed = dayjs(item.created_at);
         if (directParsed.isValid()) {
-          if (startDate && directParsed.isBefore(startDate.startOf("day"))) {
+          if (
+            filters.startDate &&
+            directParsed.isBefore(filters.startDate.startOf("day"))
+          ) {
             return false;
           }
-          if (endDate && directParsed.isAfter(endDate.endOf("day"))) {
+          if (
+            filters.endDate &&
+            directParsed.isAfter(filters.endDate.endOf("day"))
+          ) {
             return false;
           }
         }
       }
     }
 
+    // 3. Model filter
+    if (filters.selectedModels.length > 0) {
+      if (!item.model || !filters.selectedModels.includes(item.model)) {
+        return false;
+      }
+    }
+
     return true;
   });
+
+  const isStartDateChanged =
+    (tempFilters.startDate === null) !== (filters.startDate === null) ||
+    (tempFilters.startDate !== null &&
+      filters.startDate !== null &&
+      !tempFilters.startDate.isSame(filters.startDate, "day"));
+
+  const isEndDateChanged =
+    (tempFilters.endDate === null) !== (filters.endDate === null) ||
+    (tempFilters.endDate !== null &&
+      filters.endDate !== null &&
+      !tempFilters.endDate.isSame(filters.endDate, "day"));
+
+  const isModelsChanged =
+    tempFilters.selectedModels.length !== filters.selectedModels.length ||
+    tempFilters.selectedModels.some(
+      (model) => !filters.selectedModels.includes(model),
+    ) ||
+    filters.selectedModels.some(
+      (model) => !tempFilters.selectedModels.includes(model),
+    );
+
+  const hasChanges = !!(
+    isStartDateChanged ||
+    isEndDateChanged ||
+    isModelsChanged
+  );
+
+  const isResetDisabled =
+    tempFilters.startDate === null &&
+    tempFilters.endDate === null &&
+    tempFilters.selectedModels.length === 0;
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -88,61 +238,134 @@ const HistoryComponent = () => {
           <div className="w-72">
             <SearchInput
               placeholder="Search Request IDs..."
-              className="text-xs font-normal text-[#737373]"
+              className="text-xs font-normal text-neutral-500"
               containerClassName="rounded-md border-neutral-200 shadow-xs"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <div className="flex items-center gap-2 relative" ref={calendarRef}>
-            {/* Start Date Box */}
-            <button
-              onClick={() => setIsOpen((prev) => !prev)}
-              className="flex items-center justify-between gap-2 px-3 py-1.5 h-8 bg-white border border-neutral-200 rounded-md text-xs font-normal text-neutral-800 shadow-xs hover:bg-neutral-50 transition-colors min-w-[105px]"
-            >
-              <span>{startDate ? startDate.format("DD/MM/YYYY") : "Start Date"}</span>
-              <CalendarDays className="h-3.5 w-3.5 text-neutral-400" />
-            </button>
-
-            {/* End Date Box */}
-            <button
-              onClick={() => setIsOpen((prev) => !prev)}
-              className="flex items-center justify-between gap-2 px-3 py-1.5 h-8 bg-white border border-neutral-200 rounded-md text-xs font-normal text-neutral-800 shadow-xs hover:bg-neutral-50 transition-colors min-w-[105px]"
-            >
-              <span>{endDate ? endDate.format("DD/MM/YYYY") : "End Date"}</span>
-              <CalendarDays className="h-3.5 w-3.5 text-neutral-400" />
-            </button>
-
             {/* Filter Action Icon */}
             <button
-              onClick={() => setIsOpen((prev) => !prev)}
-              className="flex items-center justify-center p-2 h-8 w-8 bg-white border border-neutral-200 rounded-md text-neutral-500 shadow-xs hover:bg-neutral-50 transition-colors"
+              onClick={openFilterModal}
+              className="flex items-center justify-center p-2 bg-neutral-100  rounded-md text-neutral-950 font-normal text-sm shadow-xs hover:bg-neutral-50 transition-colors"
             >
-              <Filter className="h-3.5 w-3.5" />
+              Filters
+              <Funnel className="h-3.5 w-3.5 ms-2" />
             </button>
 
-            {/* CommonCalendar Popup wrapper */}
-            {isOpen && (
-              <div className="absolute right-0 top-[calc(100%+4px)] z-50">
+            {isFilterModalOpen && (
+              <CommonModal
+                isOpen={isFilterModalOpen}
+                title="Filters"
+                showCloseIcon={true}
+                className="max-w-[360px] rounded-md overflow-visible"
+                onClose={handleCancel}
+              >
+                {/* Filter content */}
                 <CommonCalendar
                   range
-                  inline
-                  showActionButtons
-                  value={startDate && endDate ? [startDate.toDate(), endDate.toDate()] : null}
-                  onApply={(val: any) => {
-                    if (Array.isArray(val) && val[0] && val[1]) {
-                      setStartDate(dayjs(val[0]));
-                      setEndDate(dayjs(val[1]));
-                      setIsOpen(false);
+                  value={
+                    tempFilters.startDate && tempFilters.endDate
+                      ? [
+                          tempFilters.startDate.toDate(),
+                          tempFilters.endDate.toDate(),
+                        ]
+                      : null
+                  }
+                  onChange={(val: any) => {
+                    if (val === null) {
+                      setTempFilters((prev) => ({
+                        ...prev,
+                        startDate: null,
+                        endDate: null,
+                      }));
+                    } else if (Array.isArray(val) && val[0] && val[1]) {
+                      setTempFilters((prev) => ({
+                        ...prev,
+                        startDate: dayjs(val[0]),
+                        endDate: dayjs(val[1]),
+                      }));
                     }
                   }}
-                  onCancel={() => {
-                    setIsOpen(false);
-                  }}
-                  popupClassName="shadow-xl"
+                  showActionButtons={true}
+                  placeholder="Select Date Range"
+                  inputClassName="h-11 bg-white rounded-lg border border-neutral-200 shadow-sm text-neutral-800 text-sm font-medium px-3 focus:outline-none focus:ring-2 focus:ring-purple-300"
                 />
-              </div>
+
+                <div className="mt-4">
+                  <label className="text-base font-medium text-neutral-950 mb-4">
+                    Select Model
+                  </label>
+                  <div className="flex flex-col gap-3">
+                    {providers?.map((provider) =>
+                      provider?.models?.map((model) => {
+                        const isChecked = tempFilters.selectedModels.includes(
+                          model.id,
+                        );
+                        return (
+                          <label
+                            key={model.id}
+                            className="flex w-full cursor-pointer items-center gap-2 py-1 select-none"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => handleToggleModel(model.id)}
+                              className="h-5 w-5 cursor-pointer rounded-md border-neutral-300 accent-neutral-950 shadow-xs"
+                            />
+
+                            <span className="text-sm font-medium text-neutral-800">
+                              {model.display_name || model.id}
+                            </span>
+                          </label>
+                        );
+                      }),
+                    )}
+                  </div>
+                </div>
+
+                {/**buttons */}
+                <div className="border-t border-neutral-100 my-3" />
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    disabled={isResetDisabled}
+                    className={cn(
+                      "text-violet-600 hover:text-violet-700 font-medium text-xs transition-colors focus:outline-none",
+                      isResetDisabled
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer",
+                    )}
+                  >
+                    Reset
+                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCancel}
+                      className="rounded-md bg-neutral-100 hover:bg-neutral-200 px-4 py-2 text-xs font-medium  text-neutral-900 transition-colors cursor-pointer focus:outline-none"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleApply}
+                      disabled={!hasChanges}
+                      className={cn(
+                        "rounded-md px-4 py-2 text-xs font-medium text-white transition-all focus:outline-none",
+                        hasChanges
+                          ? "bg-gradient-to-r from-[var(--color-brand-purple)] to-[var(--color-brand-blue)] hover:opacity-90 cursor-pointer"
+                          : "bg-neutral-900 opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </CommonModal>
             )}
           </div>
         </div>
@@ -151,7 +374,7 @@ const HistoryComponent = () => {
           data={filteredData}
           columns={[
             {
-              key: "id",
+              key: "request_id",
               title: "Request ID",
             },
             {
@@ -190,4 +413,3 @@ const HistoryComponent = () => {
 };
 
 export default HistoryComponent;
-
