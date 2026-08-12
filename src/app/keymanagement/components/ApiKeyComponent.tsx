@@ -130,29 +130,9 @@ export function ApiKeyComponent({
 
   const fetchApiKeys = async () => {
     try {
-      const response = await keymanagementService.getAllAPIkeys();
-      
-      let keysArray: any[] = [];
-      if (Array.isArray(response)) {
-        keysArray = response;
-      } else if (response && typeof response === 'object') {
-        // Try standard wrappers
-        if (Array.isArray(response.data)) {
-          keysArray = response.data;
-        } else if (Array.isArray(response.items)) {
-          keysArray = response.items;
-        } else if (Array.isArray(response.api_keys)) {
-          keysArray = response.api_keys;
-        } else {
-          // Fallback: find any array property in the object
-          const possibleArray = Object.values(response).find(val => Array.isArray(val));
-          if (possibleArray) {
-            keysArray = possibleArray as any[];
-          }
-        }
-      }
-      
-      setApiKeys(keysArray);
+      const res = await keymanagementService.getAllAPIkeys();
+      const keys = Array.isArray(res) ? res : (res?.data || Object.values(res || {}).find(Array.isArray) || []);
+      setApiKeys(keys as ApiKey[]);
     } catch (error) {
       console.error("Error fetching API keys:", error);
     }
