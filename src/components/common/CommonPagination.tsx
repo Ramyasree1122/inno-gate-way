@@ -98,7 +98,7 @@ export function CommonPagination({
             disabled={pageNumber === 1}
             onClick={() => onPageChange(pageNumber - 1)}
             className={cn(
-              "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all focus:outline-none",
+              "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all focus:outline-none",
               pageNumber === 1
                 ? "text-neutral-900 opacity-50 cursor-not-allowed"
                 : "text-neutral-900 hover:bg-neutral-50 cursor-pointer",
@@ -149,7 +149,7 @@ export function CommonPagination({
             disabled={pageNumber === totalPages || totalPages === 0}
             onClick={() => onPageChange(pageNumber + 1)}
             className={cn(
-              "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all focus:outline-none",
+              "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-all focus:outline-none",
               pageNumber === totalPages || totalPages === 0
                 ? "text-neutral-900 opacity-50 cursor-not-allowed"
                 : "text-neutral-900 hover:bg-neutral-50 cursor-pointer",
