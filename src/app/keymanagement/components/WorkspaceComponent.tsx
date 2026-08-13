@@ -24,10 +24,18 @@ export function WorkspaceComponent() {
     React.useState<Workspace | null>(null);
   const [editWorkspaceName, setEditWorkspaceName] = React.useState("");
 
-  const fetchWorkspaces = async () => {
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  const fetchWorkspaces = async (search = "") => {
     try {
-      const res = await keymanagementService.getAllWorkspaces();
-      const list = Array.isArray(res) ? res : (res?.items || res?.data || Object.values(res || {}).find(Array.isArray) || []);
+      const params = search.trim() ? { search: search.trim() } : undefined;
+      const res = await keymanagementService.getAllWorkspaces(params);
+      const list = Array.isArray(res)
+        ? res
+        : res?.items ||
+          res?.data ||
+          Object.values(res || {}).find(Array.isArray) ||
+          [];
       setWorkspaces(list);
     } catch (error) {
       console.error("Error fetching workspaces:", error);
@@ -35,8 +43,14 @@ export function WorkspaceComponent() {
   };
 
   useEffect(() => {
-    fetchWorkspaces();
-  }, []);
+    const delay = searchQuery.trim() ? 1000 : 0;
+
+    const timer = setTimeout(() => {
+      fetchWorkspaces(searchQuery);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleEditWorkspace = (workspace: Workspace) => {
     setEditingWorkspace(workspace);
@@ -230,6 +244,8 @@ export function WorkspaceComponent() {
               placeholder="Search workspaces..."
               className="text-xs font-normal text-neutral-500"
               containerClassName="rounded-md border border-neutral-200 shadow-xs"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <button

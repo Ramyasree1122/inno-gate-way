@@ -4,9 +4,11 @@ import { GenerateAPIKeyPayload } from "@/shared/types/auth.types";
 
 export const keymanagementService = {
   /** Workspace Management */
-  getAllWorkspaces: async () => {
+  getAllWorkspaces: async (params?: Record<string, any>) => {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.GET_WORKSPACES);
+      const response = await axiosInstance.get(API_ENDPOINTS.GET_WORKSPACES, {
+        params,
+      });
       return response.data;
     } catch (error) {
       console.error("Error fetching workspaces:", error);
@@ -47,9 +49,11 @@ export const keymanagementService = {
       throw error;
     }
   },
-  getAllAPIkeys: async () => {
+  getAllAPIkeys: async (params?: Record<string, any>) => {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.GET_API_KEYS);
+      const response = await axiosInstance.get(API_ENDPOINTS.GET_API_KEYS, {
+        params,
+      });
       return response.data;
     } catch (error) {
       console.error("Error fetching API keys:", error);
