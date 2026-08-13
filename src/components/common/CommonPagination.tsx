@@ -88,9 +88,7 @@ export function CommonPagination({
         )}
 
         {/* Separator */}
-        {onPageSizeChange && (
-          <div className="h-4 w-[1px] bg-neutral-200" />
-        )}
+        {onPageSizeChange && <div className="h-4 w-[1px] bg-neutral-200" />}
 
         {/* Navigation Buttons */}
         <div className="flex items-center gap-1.5">
@@ -102,8 +100,8 @@ export function CommonPagination({
             className={cn(
               "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all focus:outline-none",
               pageNumber === 1
-                ? "text-neutral-300 cursor-not-allowed"
-                : "text-neutral-700 hover:bg-neutral-50 cursor-pointer"
+                ? "text-neutral-500 cursor-not-allowed"
+                : "text-neutral-950 hover:bg-neutral-50 cursor-pointer",
             )}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -137,7 +135,7 @@ export function CommonPagination({
                   "w-8 h-8 flex items-center justify-center rounded-lg text-xs font-medium transition-all focus:outline-none",
                   isCurrent
                     ? "bg-white border border-neutral-200 text-neutral-900 shadow-xs font-semibold"
-                    : "text-neutral-600 hover:bg-neutral-50 cursor-pointer"
+                    : "text-neutral-600 hover:bg-neutral-50 cursor-pointer",
                 )}
               >
                 {page}
@@ -153,8 +151,8 @@ export function CommonPagination({
             className={cn(
               "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all focus:outline-none",
               pageNumber === totalPages || totalPages === 0
-                ? "text-neutral-300 cursor-not-allowed"
-                : "text-neutral-700 hover:bg-neutral-50 cursor-pointer"
+                ? "text-neutral-500 cursor-not-allowed"
+                : "text-neutral-950 hover:bg-neutral-50 cursor-pointer",
             )}
           >
             Next
