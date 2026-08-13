@@ -19,6 +19,7 @@ import {
 import { Workspace } from "./WorkspaceComponent";
 import { CommonCalendar } from "@/components/common/CommonCalendar";
 import dayjs from "dayjs";
+import { CommonPagination } from "@/components/common/CommonPagination";
 
 export interface ApiKey {
   id: string;
@@ -33,9 +34,9 @@ export interface ApiKey {
   created_at: string;
   expires_at: string | null;
 }
-interface Provider{
-  id:string;
-  name:string;
+interface Provider {
+  id: string;
+  name: string;
 }
 const CopyButton = ({
   text,
@@ -82,10 +83,8 @@ export function ApiKeyComponent({
   const [apiKeys, setApiKeys] = React.useState<ApiKey[]>([]);
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
   const [providers, setProviders] = React.useState<Provider[]>([]);
-
-    const [searchQuery, setSearchQuery] = React.useState("");
-  
-
+  // search state
+  const [searchQuery, setSearchQuery] = React.useState("");
   // Modal states
   const [ApiKeyModalOpen, setApiKeyModalOpen] = React.useState(false);
   const [createApiKeyModalOpen, setCreateApiKeyModalOpen] =
@@ -102,6 +101,11 @@ export function ApiKeyComponent({
     | null
   >(null);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = React.useState("");
+  // Pagination states
+  const [pageNumber, setPageNumber] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
+  const [totalRecords, setTotalRecords] = React.useState(0);
+  const [totalPages, setTotalPages] = React.useState(0);
 
   const [createForm, setCreateForm] = React.useState({
     workspace_id: "",
@@ -111,18 +115,20 @@ export function ApiKeyComponent({
     access_qwen: false,
     access_anthropic: false,
   });
-
   const fetchWorkspaces = async () => {
     try {
       const res = await keymanagementService.getAllWorkspaces();
-      const list = Array.isArray(res) ? res : (res?.items || res?.data || Object.values(res || {}).find(Array.isArray) || []);
+      const list = Array.isArray(res)
+        ? res
+        : res?.items ||
+          res?.data ||
+          Object.values(res || {}).find(Array.isArray) ||
+          [];
       setWorkspaces(list);
     } catch (error) {
       console.error("Error fetching workspaces:", error);
     }
   };
-
-  
 
   const fetchProviders = async () => {
     try {
@@ -135,27 +141,46 @@ export function ApiKeyComponent({
     }
   };
 
-  const fetchApiKeys = async (search="") => {
+  const fetchApiKeys = async (
+    search = "",
+    page = pageNumber,
+    size = pageSize,
+  ) => {
     try {
-              const params = search.trim() ? { search: search.trim() } : undefined;
-
+      const params = {
+        pageNumber: page,
+        pageSize: size,
+        ...(search.trim() && { search: search.trim() }),
+      };
       const res = await keymanagementService.getAllAPIkeys(params);
-      const keys = Array.isArray(res) ? res : (res?.data || Object.values(res || {}).find(Array.isArray) || []);
-      setApiKeys(keys as ApiKey[]);
+      const pagination = res?.pagination || res || {};
+      const apiTotalPages = pagination.total_pages || 0;
+      if (page > 1 && page > apiTotalPages) {
+        await fetchApiKeys(search, Math.max(1, apiTotalPages), size);
+        return;
+      }
+      const keys = Array.isArray(res)
+        ? res
+        : res?.items ||
+          res?.data ||
+          Object.values(res || {}).find(Array.isArray) ||
+          [];
+      setApiKeys(keys);
+      setPageNumber(pagination.page_number || 1);
+      setPageSize(size);
+      setTotalRecords(pagination.total_records || 0);
+      setTotalPages(pagination.total_pages || 0);
     } catch (error) {
       console.error("Error fetching API keys:", error);
     }
   };
-
-    useEffect(() => {
-      const delay = searchQuery.trim() ? 1000 : 0;
-  
-      const timer = setTimeout(() => {
-        fetchApiKeys(searchQuery);
-      }, delay);
-  
-      return () => clearTimeout(timer);
-    }, [searchQuery]);
+  useEffect(() => {
+    const delay = searchQuery.trim() ? 1000 : 0;
+    const timer = setTimeout(() => {
+      fetchApiKeys(searchQuery, 1, pageSize);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const isFormValid =
     createForm.workspace_id !== "" &&
@@ -540,7 +565,7 @@ export function ApiKeyComponent({
                 onChange={(val) =>
                   setCreateForm((prev) => ({
                     ...prev,
-                    expires_at: val ? dayjs(val).format() : ""
+                    expires_at: val ? dayjs(val).format() : "",
                   }))
                 }
                 placeholder="dd/mm/yyyy , --:-- --"
@@ -642,7 +667,7 @@ export function ApiKeyComponent({
               placeholder="Search workspaces,users and API keys..."
               className="text-xs font-normal text-[#737373]"
               containerClassName="rounded-md border-neutral-200 shadow-xs"
-                    value={searchQuery}
+              value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
@@ -738,6 +763,15 @@ export function ApiKeyComponent({
           headerClassName="text-[#737373] text-sm font-medium"
           bodyClassName="text-sm text-neutral-950 font-normal"
           className="border-[#D4D4D4] rounded-md shadow-xs"
+        />
+        <CommonPagination
+          pageNumber={pageNumber}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          onPageSizeChange={(size) => fetchApiKeys(searchQuery, 1, size)}
+          onPageChange={(page) => fetchApiKeys(searchQuery, page, pageSize)}
+          itemName="keys"
         />
       </div>
     </>

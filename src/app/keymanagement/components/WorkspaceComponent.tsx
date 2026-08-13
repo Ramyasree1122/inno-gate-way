@@ -4,6 +4,7 @@ import { keymanagementService } from "@/services/keymanagementService";
 import { SearchInput } from "@/components/common/SearchInput";
 import { CommonTable } from "@/components/common/CommonTable";
 import { CommonModal } from "@/components/common/CommonModal";
+import { CommonPagination } from "@/components/common/CommonPagination";
 
 export interface Workspace {
   id: string;
@@ -15,7 +16,6 @@ export interface Workspace {
 
 export function WorkspaceComponent() {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
-
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = React.useState("");
@@ -23,13 +23,32 @@ export function WorkspaceComponent() {
   const [editingWorkspace, setEditingWorkspace] =
     React.useState<Workspace | null>(null);
   const [editWorkspaceName, setEditWorkspaceName] = React.useState("");
-
+  // search state
   const [searchQuery, setSearchQuery] = React.useState("");
+  // Pagination states
+  const [pageNumber, setPageNumber] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
+  const [totalRecords, setTotalRecords] = React.useState(0);
+  const [totalPages, setTotalPages] = React.useState(0);
 
-  const fetchWorkspaces = async (search = "") => {
+  const fetchWorkspaces = async (
+    search = "",
+    page = pageNumber,
+    size = pageSize,
+  ) => {
     try {
-      const params = search.trim() ? { search: search.trim() } : undefined;
+      const params = {
+        pageNumber: page,
+        pageSize: size,
+        ...(search.trim() && { search: search.trim() }),
+      };
       const res = await keymanagementService.getAllWorkspaces(params);
+      const pagination = res?.pagination || res || {};
+      const apiTotalPages = pagination.total_pages || 0;
+      if (page > 1 && page > apiTotalPages) {
+        await fetchWorkspaces(search, Math.max(1, apiTotalPages), size);
+        return;
+      }
       const list = Array.isArray(res)
         ? res
         : res?.items ||
@@ -37,6 +56,10 @@ export function WorkspaceComponent() {
           Object.values(res || {}).find(Array.isArray) ||
           [];
       setWorkspaces(list);
+      setPageNumber(pagination.page_number || 1);
+      setPageSize(size);
+      setTotalRecords(pagination.total_records || 0);
+      setTotalPages(pagination.total_pages || 0);
     } catch (error) {
       console.error("Error fetching workspaces:", error);
     }
@@ -44,11 +67,9 @@ export function WorkspaceComponent() {
 
   useEffect(() => {
     const delay = searchQuery.trim() ? 1000 : 0;
-
     const timer = setTimeout(() => {
-      fetchWorkspaces(searchQuery);
+      fetchWorkspaces(searchQuery, 1, pageSize);
     }, delay);
-
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -276,6 +297,15 @@ export function WorkspaceComponent() {
           headerClassName="text-neutral-500 text-sm font-medium"
           bodyClassName="text-sm text-neutral-950 font-normal "
           className="border-neutral-300 rounded-md shadow-xs"
+        />
+        <CommonPagination
+          pageNumber={pageNumber}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          onPageChange={(page) => fetchWorkspaces(searchQuery, page, pageSize)}
+          onPageSizeChange={(size) => fetchWorkspaces(searchQuery, 1, size)}
+          itemName="workspaces"
         />
       </div>
     </>
