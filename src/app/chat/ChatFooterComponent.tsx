@@ -218,7 +218,7 @@ export default function ChatFooterComponent() {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   type="button"
-                  className="flex h-9 w-[352px] cursor-pointer items-center justify-between gap-1 rounded-[4px] border border-[#E5E7EB] bg-white px-3 text-[13px] font-normal text-black shadow-none outline-none transition-colors hover:border-neutral-300"
+                  className="flex h-9.25 w-[352px] cursor-pointer items-center justify-between gap-1 rounded-md border border-neutral-200 bg-white px-3 text-sm font-normal text-black shadow-xs outline-none transition-colors hover:border-neutral-300"
                 >
                   <span className="truncate">
                     {providers.find(
@@ -279,7 +279,7 @@ export default function ChatFooterComponent() {
               placeholder="Please Enter API Keys"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              className="w-full rounded-[4px] border border-[#E5E7EB] px-3 py-[6px] text-[13px] placeholder:text-neutral-400 outline-none focus:border-[var(--color-brand-purple)] focus:ring-1 focus:ring-[var(--color-brand-purple)] mb-5"
+              className="w-full rounded-md bg-white border border-neutral-200 px-3 py-[8px] text-sm font-normal placeholder:text-neutral-400 outline-none focus:border-[var(--color-brand-purple)] focus:ring-1 focus:ring-[var(--color-brand-purple)] mb-5 shadow-xs"
             />
 
             <button
