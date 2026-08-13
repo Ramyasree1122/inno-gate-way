@@ -305,9 +305,9 @@ const HistoryComponent = () => {
                           model.id,
                         );
                         return (
-                          <label
+                          <div
                             key={model.id}
-                            className="flex w-full cursor-pointer items-center gap-2 py-1 select-none"
+                            className="flex w-full items-center gap-2 py-1 select-none"
                           >
                             <input
                               type="checkbox"
@@ -319,7 +319,7 @@ const HistoryComponent = () => {
                             <span className="text-sm font-medium text-neutral-800">
                               {model.display_name || model.id}
                             </span>
-                          </label>
+                          </div>
                         );
                       }),
                     )}
