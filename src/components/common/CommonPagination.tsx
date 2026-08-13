@@ -100,8 +100,8 @@ export function CommonPagination({
             className={cn(
               "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all focus:outline-none",
               pageNumber === 1
-                ? "text-neutral-500 cursor-not-allowed"
-                : "text-neutral-950 hover:bg-neutral-50 cursor-pointer",
+                ? "text-neutral-900 opacity-50 cursor-not-allowed"
+                : "text-neutral-900 hover:bg-neutral-50 cursor-pointer",
             )}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -151,8 +151,8 @@ export function CommonPagination({
             className={cn(
               "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all focus:outline-none",
               pageNumber === totalPages || totalPages === 0
-                ? "text-neutral-500 cursor-not-allowed"
-                : "text-neutral-950 hover:bg-neutral-50 cursor-pointer",
+                ? "text-neutral-900 opacity-50 cursor-not-allowed"
+                : "text-neutral-900 hover:bg-neutral-50 cursor-pointer",
             )}
           >
             Next
