@@ -4,7 +4,7 @@ import { CommonTable } from "@/components/common/CommonTable";
 import { SearchInput } from "@/components/common/SearchInput";
 import { historyService } from "@/services/historyService";
 import { useEffect, useState, useRef } from "react";
-import { Funnel } from "lucide-react";
+import { Funnel, LoaderIcon } from "lucide-react";
 import dayjs from "dayjs";
 import { CommonModal } from "@/components/common/CommonModal";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,8 @@ interface Provider {
 
 const HistoryComponent = () => {
   const [historyData, setHistoryData] = useState<any[]>([]);
+  //loader state
+  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const calendarRef = useRef<HTMLDivElement | null>(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -50,6 +52,7 @@ const HistoryComponent = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
 
   const fetchHistory = async (currentFilters?: FilterState) => {
+    setIsLoading(true);
     try {
       const params: Record<string, any> = {};
       if (currentFilters) {
@@ -69,6 +72,8 @@ const HistoryComponent = () => {
       setHistoryData(data || []);
     } catch (error) {
       console.error("Error fetching history:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -86,10 +91,10 @@ const HistoryComponent = () => {
     }));
   };
 
-  const handleApply = () => {
-    setFilters(tempFilters);
-    fetchHistory(tempFilters);
+  const handleApply = async () => {
     setIsFilterModalOpen(false);
+    setFilters(tempFilters);
+    await fetchHistory(tempFilters);
   };
 
   const handleCancel = () => {
@@ -370,43 +375,50 @@ const HistoryComponent = () => {
           </div>
         </div>
 
-        <CommonTable
-          data={filteredData}
-          columns={[
-            {
-              key: "request_id",
-              title: "Request ID",
-            },
-            {
-              key: "created_at",
-              title: "Time",
-            },
-            {
-              key: "model",
-              title: "Model",
-            },
-            {
-              key: "status_code",
-              title: "Status",
-            },
-            {
-              key: "latency_ms",
-              title: "Latency",
-            },
-            {
-              key: "total_tokens",
-              title: "Tokens",
-            },
-            {
-              key: "optimizer_saved_tokens",
-              title: "Saved",
-            },
-          ]}
-          headerClassName="text-neutral-500 text-sm font-medium"
-          bodyClassName="text-sm text-neutral-950 font-normal py-3"
-          emptyMessage="No history available."
-          className="border-neutral-300 rounded-md shadow-xs"
-        />
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50">
+              <LoaderIcon className="w-8 h-8 animate-spin text-neutral-900" />
+            </div>
+          )}
+          <CommonTable
+            data={filteredData}
+            columns={[
+              {
+                key: "request_id",
+                title: "Request ID",
+              },
+              {
+                key: "created_at",
+                title: "Time",
+              },
+              {
+                key: "model",
+                title: "Model",
+              },
+              {
+                key: "status_code",
+                title: "Status",
+              },
+              {
+                key: "latency_ms",
+                title: "Latency",
+              },
+              {
+                key: "total_tokens",
+                title: "Tokens",
+              },
+              {
+                key: "optimizer_saved_tokens",
+                title: "Saved",
+              },
+            ]}
+            headerClassName="text-neutral-500 text-sm font-medium"
+            bodyClassName="text-sm text-neutral-950 font-normal py-3"
+            emptyMessage="No history available."
+            className="border-neutral-300 rounded-md shadow-xs"
+          />
+        </div>
       </div>
     </div>
   );
