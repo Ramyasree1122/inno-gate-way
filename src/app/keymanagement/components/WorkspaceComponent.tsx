@@ -5,6 +5,7 @@ import { SearchInput } from "@/components/common/SearchInput";
 import { CommonTable } from "@/components/common/CommonTable";
 import { CommonModal } from "@/components/common/CommonModal";
 import { CommonPagination } from "@/components/common/CommonPagination";
+import { LoaderIcon } from "lucide-react";
 
 export interface Workspace {
   id: string;
@@ -16,6 +17,8 @@ export interface Workspace {
 
 export function WorkspaceComponent() {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
+  // Loader state
+  const [isLoading, setIsLoading] = React.useState(false);
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = React.useState("");
@@ -36,6 +39,7 @@ export function WorkspaceComponent() {
     page = pageNumber,
     size = pageSize,
   ) => {
+    setIsLoading(true);
     try {
       const params = {
         pageNumber: page,
@@ -62,6 +66,8 @@ export function WorkspaceComponent() {
       setTotalPages(pagination.total_pages || 0);
     } catch (error) {
       console.error("Error fetching workspaces:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -87,6 +93,8 @@ export function WorkspaceComponent() {
   const handleCreateWorkspaceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWorkspaceName.trim()) return;
+    setIsCreateModalOpen(false);
+    setIsLoading(true);
     try {
       const response =
         await keymanagementService.createWorkspace(newWorkspaceName);
@@ -95,14 +103,17 @@ export function WorkspaceComponent() {
       }
     } catch (error) {
       console.error("Error creating workspace:", error);
+    } finally {
+      setIsLoading(false);
+      setNewWorkspaceName("");
     }
-    setIsCreateModalOpen(false);
-    setNewWorkspaceName("");
   };
 
   const handleEditWorkspaceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingWorkspace || !editWorkspaceName.trim()) return;
+    setIsEditModalOpen(false);
+    setIsLoading(true);
     try {
       const response = await keymanagementService.updateWorkspace(
         editingWorkspace.id,
@@ -113,15 +124,18 @@ export function WorkspaceComponent() {
       }
     } catch (error) {
       console.error("Error updating workspace:", error);
+    } finally {
+      setIsLoading(false);
+      setEditingWorkspace(null);
+      setEditWorkspaceName("");
     }
-    setIsEditModalOpen(false);
-    setEditingWorkspace(null);
-    setEditWorkspaceName("");
   };
 
   const handleDeleteWorkspaceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingWorkspace) return;
+    setIsEditModalOpen(false);
+    setIsLoading(true);
     try {
       const response = await keymanagementService.deleteWorkspace(
         editingWorkspace.id,
@@ -131,9 +145,10 @@ export function WorkspaceComponent() {
       }
     } catch (error) {
       console.error("Error deleting workspace:", error);
+    } finally {
+      setIsLoading(false);
+      setEditingWorkspace(null);
     }
-    setIsEditModalOpen(false);
-    setEditingWorkspace(null);
   };
 
   return (
@@ -256,9 +271,6 @@ export function WorkspaceComponent() {
 
       {/* Workspaces Section */}
       <div className="bg-white rounded-lg p-3 mb-2">
-        {/* <h2 className="text-neutral-900 text-xl font-semibold mb-4">
-          Workspaces
-        </h2> */}
         <div className="flex justify-between items-center w-full mb-4">
           <div className="w-72">
             <SearchInput
@@ -277,27 +289,34 @@ export function WorkspaceComponent() {
           </button>
         </div>
 
-        <CommonTable
-          data={workspaces}
-          columns={[
-            { key: "name", title: "Workspace" },
-            { key: "created_by", title: "Created by" },
-            { key: "created_at", title: "Created on" },
-          ]}
-          actions={(row) => [
-            {
-              label: "Edit",
-              onClick: () => handleEditWorkspace(row),
-            },
-            {
-              label: "Delete",
-              onClick: () => handleDeleteWorkspace(row),
-            },
-          ]}
-          headerClassName="text-neutral-500 text-sm font-medium"
-          bodyClassName="text-sm text-neutral-950 font-normal "
-          className="border-neutral-300 rounded-md shadow-xs"
-        />
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50">
+              <LoaderIcon className="w-8 h-8 animate-spin text-neutral-900" />
+            </div>
+          )}
+          <CommonTable
+            data={workspaces}
+            columns={[
+              { key: "name", title: "Workspace" },
+              { key: "created_by", title: "Created by" },
+              { key: "created_at", title: "Created on" },
+            ]}
+            actions={(row) => [
+              {
+                label: "Edit",
+                onClick: () => handleEditWorkspace(row),
+              },
+              {
+                label: "Delete",
+                onClick: () => handleDeleteWorkspace(row),
+              },
+            ]}
+            headerClassName="text-neutral-500 text-sm font-medium"
+            bodyClassName="text-sm text-neutral-950 font-normal "
+            className="border-neutral-300 rounded-md shadow-xs"
+          />
+        </div>
         <CommonPagination
           pageNumber={pageNumber}
           pageSize={pageSize}

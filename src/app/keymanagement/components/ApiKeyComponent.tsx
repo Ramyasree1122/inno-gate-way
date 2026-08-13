@@ -4,7 +4,7 @@ import { keymanagementService } from "@/services/keymanagementService";
 import { dashboardService } from "@/services/dashboardService";
 import { SearchInput } from "@/components/common/SearchInput";
 import { CommonTable } from "@/components/common/CommonTable";
-import { Copy, ChevronDown, Check } from "lucide-react";
+import { Copy, ChevronDown, Check, LoaderIcon } from "lucide-react";
 import {
   formatLastUsed,
   formatExpiresOn,
@@ -82,6 +82,7 @@ export function ApiKeyComponent({
 } = {}) {
   const [apiKeys, setApiKeys] = React.useState<ApiKey[]>([]);
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [providers, setProviders] = React.useState<Provider[]>([]);
   // search state
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -146,6 +147,7 @@ export function ApiKeyComponent({
     page = pageNumber,
     size = pageSize,
   ) => {
+    setIsLoading(true);
     try {
       const params = {
         pageNumber: page,
@@ -172,6 +174,8 @@ export function ApiKeyComponent({
       setTotalPages(pagination.total_pages || 0);
     } catch (error) {
       console.error("Error fetching API keys:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
   useEffect(() => {
@@ -198,6 +202,8 @@ export function ApiKeyComponent({
   const handleCreateApiKeySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
+    setCreateApiKeyModalOpen(false);
+    setIsLoading(true);
     try {
       const payload = {
         workspace_id: createForm.workspace_id,
@@ -209,6 +215,10 @@ export function ApiKeyComponent({
       };
       await keymanagementService.generateNewAPIKey(payload);
       await fetchApiKeys();
+    } catch (error) {
+      console.error("Error creating API key:", error);
+    } finally {
+      setIsLoading(false);
       setCreateForm({
         workspace_id: "",
         owner: "",
@@ -217,9 +227,6 @@ export function ApiKeyComponent({
         access_qwen: false,
         access_anthropic: false,
       });
-      setCreateApiKeyModalOpen(false);
-    } catch (error) {
-      console.error("Error creating API key:", error);
     }
   };
 
@@ -253,6 +260,9 @@ export function ApiKeyComponent({
   const handleApiKeySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeApiKey) return;
+    setApiKeyModalOpen(false);
+    setActiveApiKey(null);
+    setIsLoading(true);
     try {
       let success = false;
       if (activeApiKey.mode === "change_workspace") {
@@ -280,13 +290,10 @@ export function ApiKeyComponent({
         await fetchApiKeys();
       }
     } catch (error) {
-      console.error(
-        `Error executing API key action ${activeApiKey.mode}:`,
-        error,
-      );
+      console.error(`Error executing API key action ${mode}:`, error);
+    } finally {
+      setIsLoading(false);
     }
-    setApiKeyModalOpen(false);
-    setActiveApiKey(null);
   };
 
   return (
@@ -679,91 +686,98 @@ export function ApiKeyComponent({
           </button>
         </div>
 
-        <CommonTable
-          data={apiKeys}
-          columns={[
-            { key: "workspace_name", title: "Workspace" },
-            { key: "owner", title: "User Email" },
-            { key: "provider", title: "Provider" },
-            {
-              key: "key_prefix",
-              title: "Key Prefix",
-              render: (row) => (
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="truncate max-w-[150px] inline-block align-middle"
-                    title={row.key_prefix}
-                  >
-                    {row.key_prefix}
-                  </span>
-                  <CopyButton
-                    text={row.key_prefix}
-                    disabled={!row?.is_active}
-                  />
-                </div>
-              ),
-            },
-            {
-              key: "is_active",
-              title: "Status",
-              render: (row) =>
-                row.is_active ? (
-                  <span className="bg-green-200 text-green-800  px-2 py-0.5 rounded-md text-xs font-medium  shadow-sm">
-                    Enabled
-                  </span>
-                ) : (
-                  <span className="bg-neutral-100 text-neutral-900 border-white px-2 py-0.5 rounded-md text-xs font-medium">
-                    Disabled
-                  </span>
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 ">
+              <LoaderIcon className="w-8 h-8 animate-spin text-neutral-900" />
+            </div>
+          )}
+          <CommonTable
+            data={apiKeys}
+            columns={[
+              { key: "workspace_name", title: "Workspace" },
+              { key: "owner", title: "User Email" },
+              { key: "provider", title: "Provider" },
+              {
+                key: "key_prefix",
+                title: "Key Prefix",
+                render: (row) => (
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="truncate max-w-[150px] inline-block align-middle"
+                      title={row.key_prefix}
+                    >
+                      {row.key_prefix}
+                    </span>
+                    <CopyButton
+                      text={row.key_prefix}
+                      disabled={!row?.is_active}
+                    />
+                  </div>
                 ),
-            },
-            {
-              key: "last_used_at",
-              title: "Last Used",
-              render: (row) => formatLastUsed(row.last_used_at),
-            },
-            { key: "created_at", title: "Created on" },
-            {
-              key: "expires_at",
-              title: "Expires on",
-              render: (row) => formatExpiresOn(row.expires_at),
-            },
-          ]}
-          actions={(row) => [
-            {
-              label: "Change Workspace",
-              onClick: () => row.is_active && handleChangeWorkspace(row),
-              className: !row.is_active
-                ? "text-[#BDBDBD] cursor-not-allowed pointer-events-none hover:!bg-transparent focus:!bg-transparent data-[focus]:!bg-transparent"
-                : undefined,
-            },
-            {
-              label: "Extend Duration",
-              onClick: () => row.is_active && handleExtendDuration(row),
-              className: !row.is_active
-                ? "text-[#BDBDBD] cursor-not-allowed pointer-events-none hover:!bg-transparent focus:!bg-transparent data-[focus]:!bg-transparent"
-                : undefined,
-            },
-            {
-              label: "Regenerate Key",
-              onClick: () => row.is_active && handleRegenerateKey(row),
-              className: !row.is_active
-                ? "text-[#BDBDBD] cursor-not-allowed pointer-events-none hover:!bg-transparent focus:!bg-transparent data-[focus]:!bg-transparent"
-                : undefined,
-            },
-            {
-              label: row.is_active ? "Disable Key" : "Enable Key",
-              onClick: () => handleDisableApiKey(row),
-            },
-            {
-              label: "Delete",
-              onClick: () => handleDeleteApiKey(row),
-            },
-          ]}
-          headerClassName="text-[#737373] text-sm font-medium"
-          bodyClassName="text-sm text-neutral-950 font-normal"
-          className="border-[#D4D4D4] rounded-md shadow-xs"
-        />
+              },
+              {
+                key: "is_active",
+                title: "Status",
+                render: (row) =>
+                  row.is_active ? (
+                    <span className="bg-green-200 text-green-800  px-2 py-0.5 rounded-md text-xs font-medium  shadow-sm">
+                      Enabled
+                    </span>
+                  ) : (
+                    <span className="bg-neutral-100 text-neutral-900 border-white px-2 py-0.5 rounded-md text-xs font-medium">
+                      Disabled
+                    </span>
+                  ),
+              },
+              {
+                key: "last_used_at",
+                title: "Last Used",
+                render: (row) => formatLastUsed(row.last_used_at),
+              },
+              { key: "created_at", title: "Created on" },
+              {
+                key: "expires_at",
+                title: "Expires on",
+                render: (row) => formatExpiresOn(row.expires_at),
+              },
+            ]}
+            actions={(row) => [
+              {
+                label: "Change Workspace",
+                onClick: () => row.is_active && handleChangeWorkspace(row),
+                className: !row.is_active
+                  ? "text-[#BDBDBD] cursor-not-allowed pointer-events-none hover:!bg-transparent focus:!bg-transparent data-[focus]:!bg-transparent"
+                  : undefined,
+              },
+              {
+                label: "Extend Duration",
+                onClick: () => row.is_active && handleExtendDuration(row),
+                className: !row.is_active
+                  ? "text-[#BDBDBD] cursor-not-allowed pointer-events-none hover:!bg-transparent focus:!bg-transparent data-[focus]:!bg-transparent"
+                  : undefined,
+              },
+              {
+                label: "Regenerate Key",
+                onClick: () => row.is_active && handleRegenerateKey(row),
+                className: !row.is_active
+                  ? "text-[#BDBDBD] cursor-not-allowed pointer-events-none hover:!bg-transparent focus:!bg-transparent data-[focus]:!bg-transparent"
+                  : undefined,
+              },
+              {
+                label: row.is_active ? "Disable Key" : "Enable Key",
+                onClick: () => handleDisableApiKey(row),
+              },
+              {
+                label: "Delete",
+                onClick: () => handleDeleteApiKey(row),
+              },
+            ]}
+            headerClassName="text-[#737373] text-sm font-medium"
+            bodyClassName="text-sm text-neutral-950 font-normal"
+            className="border-[#D4D4D4] rounded-md shadow-xs"
+          />
+        </div>
         <CommonPagination
           pageNumber={pageNumber}
           pageSize={pageSize}
